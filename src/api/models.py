@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
-
+#hola primer commit eduardo
 db = SQLAlchemy()
 
 class User(db.Model):
