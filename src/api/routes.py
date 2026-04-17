@@ -1,17 +1,9 @@
 from api.utils import generate_sitemap, APIException
-from api.models import db, User
 from flask import Flask, request, jsonify, url_for, Blueprint
-from flask import Flask, request, jsonify, Blueprint
 from api.models import db, User, DailyLog
 from flask_cors import CORS
 
 api = Blueprint('api', __name__)
-"""
-    This module takes care of starting the API Server, Loading the DB and Adding the endpoints
-    """
-
-api = Blueprint('api', __name__)
-
 
 CORS(api)
 
@@ -57,71 +49,66 @@ def get_all_logs():
     return jsonify(response_body), 200
 
 
-# from flask import Flask, request, jsonify
-# from flask_cors import CORS
+foods = []
+current_id = 1
 
-# app = Flask(__name__)
-# CORS(app)
-
-# foods = []
-# current_id = 1
-
-#  GET
+# GET
 
 
-# @app.route('/foods', methods=['GET'])
-# def get_foods():
-#     return jsonify(foods), 200
+@api.route('/foods', methods=['GET'])
+def get_foods():
+    return jsonify(foods), 200
 
-#  POST
-
-
-# @app.route('/foods', methods=['POST'])
-# def create_food():
-#     global current_id
-#     data = request.json
-
-#     new_food = {
-#         "id": current_id,
-#         "name": data["name"],
-#         "calories": data["calories"],
-#         "category": data["category"]
-#     }
-
-#     foods.append(new_food)
-#     current_id += 1
-
-#     return jsonify(new_food), 201
-
-#  PUT
+# POST
 
 
-# @app.route('/foods/<int:id>', methods=['PUT'])
-# def update_food(id):
-#     data = request.json
+@api.route('/foods', methods=['POST'])
+def create_food():
+    global current_id
+    data = request.json
 
-#     for food in foods:
-#         if food["id"] == id:
-#             food.update(data)
-#             return jsonify(food), 200
+    new_food = {
+        "id": current_id,
+        "name": data["name"],
+        "calories": data["calories"],
+        "category": data["category"]
+    }
 
-#     return jsonify({"msg": "Not found"}), 404
+    foods.append(new_food)
+    current_id += 1
 
-#  DELETE
+    return jsonify(new_food), 201
 
-
-# @app.route('/foods/<int:id>', methods=['DELETE'])
-# def delete_food(id):
-#     global foods
-#     foods = [f for f in foods if f["id"] != id]
-#     return jsonify({"msg": "Deleted"}), 200
-
-# @app.route('/foods', methods=['DELETE'])
-# def delete_all_foods():
-#     global foods
-#     foods = []
-#     return jsonify({"msg": "All foods deleted"}), 200
+# PUT
 
 
-# if __name__ == "__main__":
-#     app.run(debug=True, port=3001)
+@api.route('/foods/<int:id>', methods=['PUT'])
+def update_food(id):
+    data = request.json
+
+    for food in foods:
+        if food["id"] == id:
+            food.update(data)
+            return jsonify(food), 200
+
+    return jsonify({"msg": "Not found"}), 404
+
+# DELETE
+
+
+@api.route('/foods/<int:id>', methods=['DELETE'])
+def delete_food(id):
+    global foods
+    foods = [f for f in foods if f["id"] != id]
+    return jsonify({"msg": "Deleted"}), 200
+
+
+@api.route('/foods', methods=['DELETE'])
+def delete_all_foods():
+    global foods
+    foods = []
+    return jsonify({"msg": "All foods deleted"}), 200
+
+
+if __name__ == "__main__":
+    api.run(debug=True, port=3001)
