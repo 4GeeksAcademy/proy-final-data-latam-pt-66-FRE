@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export const Navbar = () => {
+<<<<<<< HEAD
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
 
@@ -79,4 +80,25 @@ export const Navbar = () => {
             </div>
         </nav>
     );
+=======
+	return (
+		<nav className="navbar navbar-light bg-light">
+			<div className="container d-flex align-items-center justify-content-between">
+
+				<Link to="/" className="text-decoration-none">
+					<h1 className="text-success m-0">
+						NutriFit
+					</h1>
+				</Link>
+
+				<Link to="/" className="text-decoration-none">
+					<button className="btn btn-success">
+						Registra tus alimentos
+					</button>
+				</Link>
+
+			</div>
+		</nav>
+	);
+>>>>>>> 44054c3 (Agregar alimentos, editarlos, borrarlos, categorizar, progreso)
 };
