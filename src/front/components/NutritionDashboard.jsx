@@ -7,10 +7,6 @@ export const NutritionDashboard = () => {
 
     const tmb = calculateTMB(state.user);
 
-    // if (!tmb) {
-    //     return <div className="alert alert-success text-center">Completa tu perfil</div>;
-    // }
-
     const calories = calculateCalories(tmb, state.goal);
     const macros = calculateMacros(calories);
 

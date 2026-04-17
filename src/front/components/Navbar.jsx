@@ -2,7 +2,6 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export const Navbar = () => {
-<<<<<<< HEAD
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
 
@@ -52,15 +51,15 @@ export const Navbar = () => {
                                         Hola, Raymon
                                     </span>
                                 </div>
-                                <button 
-                                    className="btn btn-outline-light btn-sm px-3" 
-                                    style={{ 
-                                        borderRadius: "20px", 
-                                        fontSize: "0.75rem", 
+                                <button
+                                    className="btn btn-outline-light btn-sm px-3"
+                                    style={{
+                                        borderRadius: "20px",
+                                        fontSize: "0.75rem",
                                         fontWeight: "600",
                                         border: "1px solid #B2FF9B",
                                         color: "#B2FF9B"
-                                    }} 
+                                    }}
                                     onClick={handleLogout}
                                 >
                                     CERRAR SESIÓN
@@ -71,7 +70,10 @@ export const Navbar = () => {
 
                     {!token && (
                         <div className="ms-auto">
-                            <Link to="/login" className="btn btn-sm px-4" style={{ backgroundColor: "#B2FF9B", color: "#006400", fontWeight: "bold", borderRadius: "20px" }}>
+                            <Link to="/track" className="btn btn-sm px-4" style={{ backgroundColor: "#B2FF9B", color: "#006400", fontWeight: "bold", borderRadius: "20px" }}>
+                                REGISTRAR ALIMENTOS
+                            </Link>
+                            <Link to="/login" className="btn btn-sm px-4 ms-3" style={{ backgroundColor: "#B2FF9B", color: "#006400", fontWeight: "bold", borderRadius: "20px" }}>
                                 ENTRAR
                             </Link>
                         </div>
@@ -80,25 +82,4 @@ export const Navbar = () => {
             </div>
         </nav>
     );
-=======
-	return (
-		<nav className="navbar navbar-light bg-light">
-			<div className="container d-flex align-items-center justify-content-between">
-
-				<Link to="/" className="text-decoration-none">
-					<h1 className="text-success m-0">
-						NutriFit
-					</h1>
-				</Link>
-
-				<Link to="/" className="text-decoration-none">
-					<button className="btn btn-success">
-						Registra tus alimentos
-					</button>
-				</Link>
-
-			</div>
-		</nav>
-	);
->>>>>>> 44054c3 (Agregar alimentos, editarlos, borrarlos, categorizar, progreso)
 };
