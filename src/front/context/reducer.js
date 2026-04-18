@@ -1,13 +1,14 @@
-// PROYECTO FINAL
 export const initialState = {
   foods: [],
   category: "All",
   goal: "maintain",
+  diet: "balanced", // 🆕 tipo de dieta
   user: {
     weight: "",
     height: "",
     age: "",
     gender: "",
+    activity: "moderate", // 🆕 nivel de actividad
   },
 };
 
@@ -41,6 +42,15 @@ export const reducer = (state, action) => {
 
     case "SET_USER":
       return { ...state, user: { ...state.user, ...action.payload } };
+
+    case "SET_DIET":
+      return { ...state, diet: action.payload };
+
+    case "SET_ACTIVITY":
+      return {
+        ...state,
+        user: { ...state.user, activity: action.payload },
+      };
 
     default:
       return state;

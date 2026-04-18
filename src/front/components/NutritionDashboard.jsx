@@ -1,4 +1,3 @@
-// PROYECTO FINAL
 import { useApp } from "../context/AppContext";
 import { calculateTMB, calculateCalories, calculateMacros } from "../utils/calculations";
 
@@ -47,3 +46,40 @@ export const NutritionDashboard = () => {
         </div>
     );
 };
+
+
+// import { useApp } from "../context/AppContext";
+// import {
+//   calculateTMB,
+//   calculateCalories,
+//   getDietRecommendation
+// } from "../utils/calculations";
+
+// export const NutritionDashboard = () => {
+//   const { state } = useApp();
+
+//   const tmb = calculateTMB(state.user);
+//   const calories = calculateCalories(tmb, state.goal, state.user.activity);
+
+//   const diet = getDietRecommendation(state.goal, state.diet);
+
+//   if (!tmb) {
+//     return <div className="alert alert-info">Completa tu perfil</div>;
+//   }
+
+//   return (
+//     <div className="card p-3">
+//       <h4 className="text-success">Tu plan nutricional</h4>
+
+//       <p><strong>Calorías recomendadas:</strong> {Math.round(calories)}</p>
+
+//       <p><strong>Proteína:</strong> {diet.protein}%</p>
+//       <p><strong>Carbohidratos:</strong> {diet.carbs}%</p>
+//       <p><strong>Grasas:</strong> {diet.fat}%</p>
+
+//       <p className="text-muted">
+//         Enfócate en: {diet.focus}
+//       </p>
+//     </div>
+//   );
+// };

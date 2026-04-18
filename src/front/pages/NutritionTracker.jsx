@@ -5,6 +5,8 @@ import { FoodForm } from "../components/FoodForm";
 import { FoodList } from "../components/FoodList";
 import { NutritionDashboard } from "../components/NutritionDashboard";
 import { CalorieProgress } from "../components/CalorieProgress";
+import { UserProfile } from "../components/UserProfile";
+import { GoalSelector } from "../components/GoalSelector";
 
 export const NutritionTracker = () => {
     const { loadFoods } = useApp();
@@ -19,6 +21,8 @@ export const NutritionTracker = () => {
 
             <CalorieProgress />
             <NutritionDashboard />
+            <UserProfile />
+            <GoalSelector />
 
             <div className="row">
                 <div className="col-md-5">
