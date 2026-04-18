@@ -12,7 +12,6 @@ export const Login = () => {
         e.preventDefault();
 
         try {
-            // CORRECCIÓN: Usamos ruta relativa para evitar el bloqueo de Codespaces
             const response = await fetch("/api/login", {
                 method: "POST",
                 headers: {
@@ -27,19 +26,16 @@ export const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Guardamos el token y los datos en el state global
                 dispatch({
                     type: "login",
                     payload: { token: data.token, user: data.user }
                 });
 
-                // Guardamos en localStorage para que la sesión persista al refrescar
                 localStorage.setItem("token", data.token);
 
-                alert("¡Bienvenido a NutriUNET!");
-                navigate("/"); // Te redirige automáticamente al Home
+                alert("¡Bienvenido a NUTRIFIT!");
+                navigate("/"); 
             } else {
-                // Si los datos no coinciden con la base de datos (image_8705c5.png)
                 alert("Error: " + (data.msg || "Credenciales incorrectas"));
             }
         } catch (error) {
@@ -50,14 +46,15 @@ export const Login = () => {
 
     return (
         <div className="container mt-5">
-            <div className="card p-4 mx-auto shadow" style={{ maxWidth: "400px", borderTop: "5px solid #198754" }}>
+            <div className="card p-4 mx-auto shadow" style={{ maxWidth: "400px", borderTop: "5px solid #004d00" }}>
                 <div className="text-center mb-4">
-                    <h2 className="fw-bold text-success">NutriUNET</h2>
-                    <p className="text-muted">Ingresa a tu plan nutricional</p>
+                    {/* Solo un título principal aquí */}
+                    <h2 className="fw-bold" style={{ color: "#004d00" }}>NUTRIFIT</h2>
+                    <p className="text-muted small">Ingresa a tu plan nutricional</p>
                 </div>
                 <form onSubmit={handleLogin}>
                     <div className="mb-3">
-                        <label className="form-label">Correo Electrónico</label>
+                        <label className="form-label fw-bold">Correo Electrónico</label>
                         <input
                             type="email"
                             className="form-control"
@@ -68,7 +65,7 @@ export const Login = () => {
                         />
                     </div>
                     <div className="mb-3">
-                        <label className="form-label">Contraseña</label>
+                        <label className="form-label fw-bold">Contraseña</label>
                         <input
                             type="password"
                             className="form-control"
@@ -78,7 +75,7 @@ export const Login = () => {
                             required
                         />
                     </div>
-                    <button type="submit" className="btn btn-success w-100 fw-bold mb-3">
+                    <button type="submit" className="btn btn-success w-100 fw-bold mb-3" style={{ backgroundColor: "#198754" }}>
                         ENTRAR
                     </button>
                     <div className="text-center">
@@ -93,6 +90,7 @@ export const Login = () => {
                     </div>
                 </form>
             </div>
+            
         </div>
     );
 };

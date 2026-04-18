@@ -7,19 +7,17 @@ export const Navbar = () => {
 
     const handleLogout = () => {
         localStorage.removeItem("token");
-        // Usamos navigate para una transición suave, o window.location para resetear el estado
         window.location.href = "/login";
     };
 
     return (
-        <nav className="navbar navbar-expand-lg shadow-sm" style={{ backgroundColor: "#006400", padding: "10px 0" }}>
+        <nav className="navbar navbar-expand-lg shadow-sm" style={{ backgroundColor: "#004d00", padding: "12px 0" }}>
             <div className="container">
-                {/* Logo principal */}
-                <Link to="/" className="navbar-brand fw-bold fs-3" style={{ color: "#E0FFDE" }}>
-                    NutriUNET
+                {/* LOGO ACTUALIZADO A NUTRIFIT */}
+                <Link to="/" className="navbar-brand fw-bolder fs-2" style={{ color: "#B2FF9B", letterSpacing: "1px" }}>
+                    NUTRIFIT
                 </Link>
 
-                {/* Botón de hamburguesa para móviles */}
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span className="navbar-toggler-icon" style={{ filter: "invert(1)" }}></span>
                 </button>
@@ -27,42 +25,38 @@ export const Navbar = () => {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     {token && (
                         <>
-                            {/* Menú Central */}
-                            <ul className="navbar-nav d-flex flex-row gap-2 ms-lg-4 mt-2 mt-lg-0">
+                            {/* Menú Central Simplificado */}
+                            <ul className="navbar-nav mx-auto gap-3">
                                 <li className="nav-item">
-                                    <Link className="nav-link px-2" style={{ color: "#B2FF9B", fontSize: "0.85rem" }} to="/">INICIO</Link>
+                                    <Link className="nav-link fw-bold px-3" style={{ color: "#E0FFDE" }} to="/">INICIO</Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link className="nav-link px-2" style={{ color: "#B2FF9B", fontSize: "0.85rem" }} to="/perfil">MIS DATOS</Link>
+                                    <Link className="nav-link fw-bold px-3" style={{ color: "#E0FFDE" }} to="/calculadora">CALCULADORA</Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link className="nav-link px-2 fw-bold text-white" style={{ fontSize: "0.85rem" }} to="/">DIARIO ALIMENTOS</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className="nav-link px-2" style={{ color: "#B2FF9B", fontSize: "0.85rem" }} to="/">METAS MACROS</Link>
+                                    <Link className="nav-link fw-bold px-3" style={{ color: "#E0FFDE" }} to="/progreso">HISTORIAL</Link>
                                 </li>
                             </ul>
 
                             {/* Sección Derecha: Usuario y Logout */}
                             <div className="ms-auto d-flex align-items-center gap-3">
-                                <div className="d-flex align-items-center">
-                                    <i className="fas fa-user-circle me-2" style={{ color: "#E0FFDE" }}></i>
-                                    <span style={{ color: "#E0FFDE", fontSize: "0.9rem", fontWeight: "500" }}>
-                                        Hola, Raymon
+                                <div className="d-flex align-items-center bg-dark bg-opacity-25 px-3 py-1 rounded-pill">
+                                    <i className="fas fa-user-circle me-2" style={{ color: "#B2FF9B" }}></i>
+                                    <span style={{ color: "#B2FF9B", fontSize: "0.9rem", fontWeight: "600" }}>
+                                        Raymon
                                     </span>
                                 </div>
                                 <button
-                                    className="btn btn-outline-light btn-sm px-3"
+                                    className="btn btn-sm px-3 fw-bold"
                                     style={{
                                         borderRadius: "20px",
-                                        fontSize: "0.75rem",
-                                        fontWeight: "600",
-                                        border: "1px solid #B2FF9B",
-                                        color: "#B2FF9B"
+                                        backgroundColor: "transparent",
+                                        border: "2px solid #ff4d4d",
+                                        color: "#ff4d4d"
                                     }}
                                     onClick={handleLogout}
                                 >
-                                    CERRAR SESIÓN
+                                    SALIR
                                 </button>
                             </div>
                         </>
@@ -70,11 +64,8 @@ export const Navbar = () => {
 
                     {!token && (
                         <div className="ms-auto">
-                            <Link to="/track" className="btn btn-sm px-4" style={{ backgroundColor: "#B2FF9B", color: "#006400", fontWeight: "bold", borderRadius: "20px" }}>
-                                REGISTRAR ALIMENTOS
-                            </Link>
-                            <Link to="/login" className="btn btn-sm px-4 ms-3" style={{ backgroundColor: "#B2FF9B", color: "#006400", fontWeight: "bold", borderRadius: "20px" }}>
-                                ENTRAR
+                            <Link to="/login" className="btn btn-sm px-4 py-2" style={{ backgroundColor: "#B2FF9B", color: "#004d00", fontWeight: "bold", borderRadius: "20px" }}>
+                                INICIAR SESIÓN
                             </Link>
                         </div>
                     )}

@@ -7,16 +7,17 @@ api = Blueprint('api', __name__)
 
 CORS(api)
 
-
 @api.route('/login', methods=['POST'])
 def handle_login():
     body = request.get_json()
-    user = User.query.filter_by(email=body.get(
-        "email"), password=body.get("password")).first()
+    user = User.query.filter_by(
+        email=body.get("email"), 
+        password=body.get("password")
+    ).first()
+    
     if user is None:
         return jsonify({"msg": "Error"}), 401
     return jsonify({"token": "test-token", "user": user.serialize()}), 200
-
 
 @api.route('/daily-log', methods=['POST'])
 def add_daily_log():
@@ -37,30 +38,19 @@ def add_daily_log():
     db.session.commit()
     return jsonify({"msg": "Guardado"}), 201
 
-
 @api.route('/daily-log', methods=['GET'])
 def get_all_logs():
     logs = DailyLog.query.order_by(DailyLog.id.desc()).all()
     return jsonify([log.serialize() for log in logs]), 200
-    response_body = {
-        "message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
-    }
-
-    return jsonify(response_body), 200
-
 
 foods = []
 current_id = 1
 
-# GET
-
+# --- RUTAS DE FOODS ---
 
 @api.route('/foods', methods=['GET'])
 def get_foods():
     return jsonify(foods), 200
-
-# POST
-
 
 @api.route('/foods', methods=['POST'])
 def create_food():
@@ -76,25 +66,16 @@ def create_food():
 
     foods.append(new_food)
     current_id += 1
-
     return jsonify(new_food), 201
-
-# PUT
-
 
 @api.route('/foods/<int:id>', methods=['PUT'])
 def update_food(id):
     data = request.json
-
     for food in foods:
         if food["id"] == id:
             food.update(data)
             return jsonify(food), 200
-
     return jsonify({"msg": "Not found"}), 404
-
-# DELETE
-
 
 @api.route('/foods/<int:id>', methods=['DELETE'])
 def delete_food(id):
@@ -102,13 +83,8 @@ def delete_food(id):
     foods = [f for f in foods if f["id"] != id]
     return jsonify({"msg": "Deleted"}), 200
 
-
 @api.route('/foods', methods=['DELETE'])
 def delete_all_foods():
     global foods
     foods = []
     return jsonify({"msg": "All foods deleted"}), 200
-
-
-if __name__ == "__main__":
-    api.run(debug=True, port=3001)
