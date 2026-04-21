@@ -10,10 +10,10 @@ export const Login = () => {
         e.preventDefault();
 
         // URL directa de tu backend en el puerto 3001
-        const backendUrl = "https://solid-broccoli-97rj4r4r5p543rgg-3001.app.github.dev/api/login";
+        const backendUrl = import.meta.env.VITE_BACKEND_URL
 
         try {
-            const response = await fetch(backendUrl, {
+            const response = await fetch(`${backendUrl}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -24,13 +24,13 @@ export const Login = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                
+
                 // Guardamos los datos necesarios para la sesión
                 sessionStorage.setItem("token", data.token);
                 sessionStorage.setItem("user_id", data.user_id);
-                
+
                 alert("¡Bienvenido de nuevo a NutriFit!");
-                navigate("/dashboard"); 
+                navigate("/dashboard");
             } else {
                 const errorData = await response.json();
                 alert("Error: " + (errorData.msg || "Credenciales incorrectas"));
@@ -48,30 +48,30 @@ export const Login = () => {
                     <h2 className="fw-bold text-success display-5">NutriFit</h2>
                     <p className="text-muted fw-semibold">Ingresa a tu panel de salud</p>
                 </div>
-                
+
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label className="form-label small fw-bold text-success">CORREO ELECTRÓNICO</label>
-                        <input 
-                            type="email" 
-                            className="form-control form-control-lg border-2 shadow-sm" 
+                        <input
+                            type="email"
+                            className="form-control form-control-lg border-2 shadow-sm"
                             placeholder="tu@correo.com"
                             style={{ borderRadius: "10px" }}
-                            value={email} 
-                            onChange={e => setEmail(e.target.value)} 
-                            required 
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            required
                         />
                     </div>
                     <div className="mb-4">
                         <label className="form-label small fw-bold text-success">CONTRASEÑA</label>
-                        <input 
-                            type="password" 
-                            className="form-control form-control-lg border-2 shadow-sm" 
+                        <input
+                            type="password"
+                            className="form-control form-control-lg border-2 shadow-sm"
                             placeholder="Tu contraseña"
                             style={{ borderRadius: "10px" }}
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
-                            required 
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            required
                         />
                     </div>
                     <button type="submit" className="btn btn-success btn-lg w-100 fw-bold shadow-sm py-2" style={{ borderRadius: "10px" }}>

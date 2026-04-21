@@ -8,12 +8,13 @@ export const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
+        const backendUrl = import.meta.env.VITE_BACKEND_URL
+
         // Usamos la URL completa de tu backend para asegurar la conexión
-        const backendUrl = "https://solid-broccoli-97rj4r4r5p543rgg-3001.app.github.dev/api/signup";
 
         try {
-            const response = await fetch(backendUrl, {
+            const response = await fetch(`${backendUrl}/api/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -42,28 +43,28 @@ export const Signup = () => {
                     <h2 className="fw-bold text-success">NutriFit</h2>
                     <p className="text-muted">Crea tu cuenta de salud</p>
                 </div>
-                
+
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label className="form-label">Correo electrónico</label>
-                        <input 
-                            type="email" 
-                            className="form-control" 
+                        <input
+                            type="email"
+                            className="form-control"
                             placeholder="ejemplo@correo.com"
-                            value={email} 
-                            onChange={e => setEmail(e.target.value)} 
-                            required 
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            required
                         />
                     </div>
                     <div className="mb-4">
                         <label className="form-label">Contraseña</label>
-                        <input 
-                            type="password" 
-                            className="form-control" 
+                        <input
+                            type="password"
+                            className="form-control"
                             placeholder="Mínimo 6 caracteres"
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
-                            required 
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            required
                         />
                     </div>
                     <button type="submit" className="btn btn-success w-100 fw-bold py-2">
