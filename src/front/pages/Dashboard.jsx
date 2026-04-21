@@ -3,34 +3,34 @@ import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
     const navigate = useNavigate();
-    
+
     // Estados para datos persistentes
     const [water, setWater] = useState(0);
     const [calories, setCalories] = useState(0);
-    const [stats, setStats] = useState({ 
-        age: "", 
-        height: "", 
-        weight: "", 
-        dietType: "Equilibrada" 
+    const [stats, setStats] = useState({
+        age: "",
+        height: "",
+        weight: "",
+        dietType: "Equilibrada"
     });
 
     // Estado para el formulario de consumo diario (Postman style)
-    const [foodEntry, setFoodEntry] = useState({ 
-        food: "", 
-        calories: "", 
-        water: "" 
+    const [foodEntry, setFoodEntry] = useState({
+        food: "",
+        calories: "",
+        water: ""
     });
 
     const token = sessionStorage.getItem("token");
     const userId = sessionStorage.getItem("user_id");
     // Asegúrate de que esta URL sea la de tu puerto 3001
-    const BACKEND_URL = "https://solid-broccoli-97rj4r4r5p543rgg-3001.app.github.dev";
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
     // --- 1. CARGA DE DATOS (GET) ---
     const loadData = async () => {
         if (!token) return;
         try {
-            const response = await fetch(`${BACKEND_URL}/api/daily-summary`, {
+            const response = await fetch(`${backendUrl}/api/daily-summary`, {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -66,7 +66,7 @@ export const Dashboard = () => {
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${BACKEND_URL}/api/user-profile`, {
+            const response = await fetch(`${backendUrl}/api/user-profile`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -95,7 +95,7 @@ export const Dashboard = () => {
     const handleAddFood = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${BACKEND_URL}/api/daily-log`, {
+            const response = await fetch(`${backendUrl}/api/daily-log`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -160,19 +160,19 @@ export const Dashboard = () => {
                             <form onSubmit={handleUpdateProfile}>
                                 <div className="mb-2">
                                     <label className="small fw-bold">EDAD</label>
-                                    <input type="number" className="form-control" value={stats.age} onChange={e => setStats({...stats, age: e.target.value})} />
+                                    <input type="number" className="form-control" value={stats.age} onChange={e => setStats({ ...stats, age: e.target.value })} />
                                 </div>
                                 <div className="mb-2">
                                     <label className="small fw-bold">ESTATURA (CM)</label>
-                                    <input type="number" className="form-control" value={stats.height} onChange={e => setStats({...stats, height: e.target.value})} />
+                                    <input type="number" className="form-control" value={stats.height} onChange={e => setStats({ ...stats, height: e.target.value })} />
                                 </div>
                                 <div className="mb-3">
                                     <label className="small fw-bold">PESO ACTUAL (KG)</label>
-                                    <input type="number" className="form-control border-success border-opacity-50" value={stats.weight} onChange={e => setStats({...stats, weight: e.target.value})} />
+                                    <input type="number" className="form-control border-success border-opacity-50" value={stats.weight} onChange={e => setStats({ ...stats, weight: e.target.value })} />
                                 </div>
                                 <div className="mb-4">
                                     <label className="small fw-bold">PLAN NUTRICIONAL</label>
-                                    <select className="form-select" value={stats.dietType} onChange={e => setStats({...stats, dietType: e.target.value})}>
+                                    <select className="form-select" value={stats.dietType} onChange={e => setStats({ ...stats, dietType: e.target.value })}>
                                         <option value="Equilibrada">Equilibrada</option>
                                         <option value="Vegana">Vegana</option>
                                         <option value="Keto">Keto</option>
@@ -187,16 +187,16 @@ export const Dashboard = () => {
                     <div className="col-md-7">
                         <div className="card shadow-sm border-0 p-4 h-100">
                             <h5 className="fw-bold text-muted mb-4">Registro Diario (Comida/Agua)</h5>
-                            
+
                             <form onSubmit={handleAddFood} className="row g-2 mb-4 p-3 bg-light rounded shadow-sm border border-success border-opacity-10">
                                 <div className="col-md-5">
-                                    <input type="text" className="form-control form-control-sm" placeholder="¿Qué consumiste?" value={foodEntry.food} onChange={e => setFoodEntry({...foodEntry, food: e.target.value})} required />
+                                    <input type="text" className="form-control form-control-sm" placeholder="¿Qué consumiste?" value={foodEntry.food} onChange={e => setFoodEntry({ ...foodEntry, food: e.target.value })} required />
                                 </div>
                                 <div className="col-md-3">
-                                    <input type="number" className="form-control form-control-sm" placeholder="Calorías" value={foodEntry.calories} onChange={e => setFoodEntry({...foodEntry, calories: e.target.value})} />
+                                    <input type="number" className="form-control form-control-sm" placeholder="Calorías" value={foodEntry.calories} onChange={e => setFoodEntry({ ...foodEntry, calories: e.target.value })} />
                                 </div>
                                 <div className="col-md-2">
-                                    <input type="number" className="form-control form-control-sm" placeholder="ml agua" value={foodEntry.water} onChange={e => setFoodEntry({...foodEntry, water: e.target.value})} />
+                                    <input type="number" className="form-control form-control-sm" placeholder="ml agua" value={foodEntry.water} onChange={e => setFoodEntry({ ...foodEntry, water: e.target.value })} />
                                 </div>
                                 <div className="col-md-2">
                                     <button className="btn btn-success btn-sm w-100 fw-bold">+</button>
@@ -209,7 +209,7 @@ export const Dashboard = () => {
                                     <p className="text-muted small fw-bold mb-0">CALORÍAS TOTALES</p>
                                 </div>
                                 <div className="col-6">
-                                    <h1 className="fw-bold text-primary display-4 mb-0">{(water/1000).toFixed(2)}L</h1>
+                                    <h1 className="fw-bold text-primary display-4 mb-0">{(water / 1000).toFixed(2)}L</h1>
                                     <p className="text-muted small fw-bold mb-0">AGUA CONSUMIDA</p>
                                 </div>
                             </div>
