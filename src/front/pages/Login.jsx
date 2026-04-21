@@ -1,96 +1,91 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { useNavigate, Link } from "react-router-dom";
 
 export const Login = () => {
-    const { state, dispatch } = useApp();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // URL directa de tu backend en el puerto 3001
+        const backendUrl = "https://solid-broccoli-97rj4r4r5p543rgg-3001.app.github.dev/api/login";
+
         try {
-            const response = await fetch("/api/login", {
+            const response = await fetch(backendUrl, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     email: email,
                     password: password
                 })
             });
 
-            const data = await response.json();
-
             if (response.ok) {
-                dispatch({
-                    type: "login",
-                    payload: { token: data.token, user: data.user }
-                });
-
-                localStorage.setItem("token", data.token);
-
-                alert("¡Bienvenido a NUTRIFIT!");
-                navigate("/"); 
+                const data = await response.json();
+                
+                // Guardamos los datos necesarios para la sesión
+                sessionStorage.setItem("token", data.token);
+                sessionStorage.setItem("user_id", data.user_id);
+                
+                alert("¡Bienvenido de nuevo a NutriFit!");
+                navigate("/dashboard"); 
             } else {
-                alert("Error: " + (data.msg || "Credenciales incorrectas"));
+                const errorData = await response.json();
+                alert("Error: " + (errorData.msg || "Credenciales incorrectas"));
             }
         } catch (error) {
-            console.error("Error en el login:", error);
-            alert("Error de conexión. Asegúrate de que el backend esté corriendo en el puerto 3001.");
+            console.error("Error de login:", error);
+            alert("No se pudo conectar con el servidor. Revisa el puerto 3001.");
         }
     };
 
     return (
-        <div className="container mt-5">
-            <div className="card p-4 mx-auto shadow" style={{ maxWidth: "400px", borderTop: "5px solid #004d00" }}>
+        <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: "#f0fdf4" }}>
+            <div className="card p-4 shadow-lg border-0" style={{ maxWidth: "400px", width: "100%", borderRadius: "20px" }}>
                 <div className="text-center mb-4">
-                    {/* Solo un título principal aquí */}
-                    <h2 className="fw-bold" style={{ color: "#004d00" }}>NUTRIFIT</h2>
-                    <p className="text-muted small">Ingresa a tu plan nutricional</p>
+                    <h2 className="fw-bold text-success display-5">NutriFit</h2>
+                    <p className="text-muted fw-semibold">Ingresa a tu panel de salud</p>
                 </div>
-                <form onSubmit={handleLogin}>
+                
+                <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label fw-bold">Correo Electrónico</label>
-                        <input
-                            type="email"
-                            className="form-control"
-                            placeholder="nombre@ejemplo.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
+                        <label className="form-label small fw-bold text-success">CORREO ELECTRÓNICO</label>
+                        <input 
+                            type="email" 
+                            className="form-control form-control-lg border-2 shadow-sm" 
+                            placeholder="tu@correo.com"
+                            style={{ borderRadius: "10px" }}
+                            value={email} 
+                            onChange={e => setEmail(e.target.value)} 
+                            required 
                         />
                     </div>
-                    <div className="mb-3">
-                        <label className="form-label fw-bold">Contraseña</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            placeholder="********"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
+                    <div className="mb-4">
+                        <label className="form-label small fw-bold text-success">CONTRASEÑA</label>
+                        <input 
+                            type="password" 
+                            className="form-control form-control-lg border-2 shadow-sm" 
+                            placeholder="Tu contraseña"
+                            style={{ borderRadius: "10px" }}
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                            required 
                         />
                     </div>
-                    <button type="submit" className="btn btn-success w-100 fw-bold mb-3" style={{ backgroundColor: "#198754" }}>
+                    <button type="submit" className="btn btn-success btn-lg w-100 fw-bold shadow-sm py-2" style={{ borderRadius: "10px" }}>
                         ENTRAR
                     </button>
-                    <div className="text-center">
-                        <span className="text-muted small">¿No tienes cuenta? </span>
-                        <button
-                            type="button"
-                            className="btn btn-link btn-sm text-success p-0 fw-bold"
-                            onClick={() => navigate("/signup")}
-                        >
-                            Regístrate aquí
-                        </button>
-                    </div>
                 </form>
+
+                <div className="text-center mt-4">
+                    <span className="text-muted small">¿No tienes cuenta? </span>
+                    <Link to="/signup" className="text-success fw-bold text-decoration-none small">
+                        Regístrate aquí
+                    </Link>
+                </div>
             </div>
-            
         </div>
     );
 };

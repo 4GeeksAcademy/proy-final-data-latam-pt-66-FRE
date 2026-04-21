@@ -6,15 +6,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    watch: {
-        usePolling: true,
-    },
+    allowedHosts: true,
     proxy: {
-        '/api': {
-            target: 'http://127.0.0.1:3001',
-            changeOrigin: true,
-            secure: false,
-        }
+      '/api': {
+        target: 'https://solid-broccoli-97rj4r4r5p543rgg-3001.app.github.dev',
+        changeOrigin: true,
+        secure: false,
+      }
     }
   },
+  build: {
+    outDir: 'dist'
+  }
 })
