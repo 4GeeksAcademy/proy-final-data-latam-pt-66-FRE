@@ -1,44 +1,38 @@
-// Import necessary components and functions from react-router-dom.
-import {
-    createBrowserRouter,
-    createRoutesFromElements,
-    Route,
-} from "react-router-dom";
+import React from "react";
+import { createBrowserRouter, createRoutesFromElements, Route } from "react-router-dom";
 import { Layout } from "./pages/Layout";
-import { Home } from "./pages/Home";
 import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
 
-// Importaciones específicas de NutriFit
+// Importaciones de NutriFit
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
-import { ProtectedRoute } from "./components/ProtectedRoute"; //
+import { NutritionPage } from "./pages/NutritionPage"; // Página de Alimentación
+import { WaterPage } from "./pages/WaterPage";       // Página de Hidratación
+import { FastingPage } from "./pages/FastingPage";   // Página de Ayuno
+import { HistoryPage } from "./pages/HistoryPage";   // Página de Historial
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
-    // CreateRoutesFromElements function allows you to build route elements declaratively.
-    // Create your routes here, if you want to keep the Navbar and Footer in all views, add your new routes inside the containing Route.
-
-      // Root Route: All navigation will start from here.
+      /* El Layout envuelve todo para que el Navbar aparezca en todas las páginas */
       <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>} >
 
-        {/* Nested Routes: Defines sub-routes within the BaseHome component. */}
+        {/* Rutas de acceso público */}
         <Route path="/" element={<Signup />} />
-        <Route path="/single/:theId" element={ <Single />} />  {/* Dynamic route for single items */}
-        <Route path="/demo" element={<Demo />} />
-
-        {/* Agregamos las rutas de NutriFit manteniendo el Layout (Navbar/Footer) */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-       <Route 
-            path="/dashboard" 
-            element={
-                <ProtectedRoute>
-                    <Dashboard />
-                </ProtectedRoute>
-            } 
-        />
+        
+        {/* Rutas de la Aplicación */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/nutricion" element={<NutritionPage />} />
+        <Route path="/hidratacion" element={<WaterPage />} />
+        <Route path="/ayuno" element={<FastingPage />} />
+        <Route path="/historial" element={<HistoryPage />} />
+
+        {/* Rutas de ejemplo/demo */}
+        <Route path="/demo" element={<Demo />} />
+        <Route path="/single/:theId" element={<Single />} />
 
       </Route>
     )

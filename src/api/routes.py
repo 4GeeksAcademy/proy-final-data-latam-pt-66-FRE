@@ -57,6 +57,12 @@ def handle_profile():
     if request.method == 'PUT':
         body = request.get_json()
         
+        # Unimos nombre y apellido para la columna 'name' del modelo
+        first = body.get("first_name", "")
+        last = body.get("last_name", "")
+        if first or last:
+            user.name = f"{first} {last}".strip()
+
         # Sincronizado con tus columnas de models.py
         user.age = body.get("age", user.age)
         user.height = body.get("height", user.height)
@@ -66,6 +72,7 @@ def handle_profile():
 
         db.session.commit()
         return jsonify({"msg": "Perfil actualizado", "user": user.serialize()}), 200
+        return jsonify({"msg": "Perfil actualizado", "user": user.serialize()}), 200
 
 # --- 3. LOGS DIARIOS (AGUA Y COMIDA) ---
 
@@ -73,16 +80,21 @@ def handle_profile():
 @jwt_required()
 def get_summary():
     user_id = get_jwt_identity()
+    # Usamos la fecha actual del servidor
     today = datetime.utcnow().date()
     
+    # Buscamos registros filtrando por usuario y fecha
     logs = DailyLog.query.filter_by(user_id=user_id, date=today).all()
     user = User.query.get(user_id)
     
+    # Sumas blindadas contra valores None
+    total_w = sum(l.water_ml for l in logs if l.water_ml is not None)
+    total_c = sum(l.calories for l in logs if l.calories is not None)
+    
     return jsonify({
-        "total_calories": sum(l.calories for l in logs),
-        "total_water": sum(l.water_ml for l in logs),
-        "diet_type": user.diet_type,
-        "logs": [l.serialize() for l in logs]
+        "total_calories": total_c,
+        "total_water": total_w,
+        "diet_type": user.diet_type if user else None
     }), 200
 
 @api.route('/daily-log', methods=['POST'])
@@ -151,19 +163,32 @@ def stop_fasting():
 @api.route('/daily-log/water', methods=['POST'])
 @jwt_required()
 def add_water_log():
-    user_id = get_jwt_identity()
-    body = request.get_json()
-    
-    # Registramos solo agua. Usamos una categoría fija para filtrar luego más fácil.
-    new_water = DailyLog(
-        user_id=user_id,
-        meal_category="Hydration",
-        food_name="Water",
-        calories=0,
-        water_ml=body.get("water", 0),
-        date=datetime.utcnow().date()
-    )
-    
-    db.session.add(new_water)
-    db.session.commit()
-    return jsonify({"msg": "Agua registrada", "log": new_water.serialize()}), 201
+    try:
+        user_id = get_jwt_identity()
+        body = request.get_json()
+        
+        # 1. Validamos que recibimos el dato
+        water_amount = body.get("water")
+        if water_amount is None:
+            return jsonify({"msg": "No se recibió la cantidad de agua"}), 400
+
+        # 2. Creamos el registro con TODOS los campos que pide tu modelo
+        # Forzamos la fecha para que no use el default fallido del modelo
+        new_log = DailyLog(
+            user_id=user_id,
+            meal_category="Hydration",
+            food_name="Water Consumption",
+            calories=0,
+            water_ml=int(water_amount),
+            date=datetime.utcnow().date() 
+        )
+        
+        db.session.add(new_log)
+        db.session.commit()
+        
+        return jsonify({"msg": "¡Guardado con éxito!", "total": water_amount}), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error real en consola: {str(e)}") # Mira tu terminal de VS Code
+        return jsonify({"msg": "Error interno", "error": str(e)}), 500
