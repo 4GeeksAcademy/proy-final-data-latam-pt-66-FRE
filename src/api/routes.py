@@ -111,17 +111,59 @@ def add_log():
 @jwt_required()
 def start_fasting():
     user_id = get_jwt_identity()
+    
+    # Verificamos si ya existe un ayuno sin terminar para este usuario
+    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
+    if active_fast:
+        return jsonify({"msg": "Ya tienes un ayuno en curso"}), 400
+
     new_fast = FastingLog(user_id=user_id, start_time=datetime.utcnow())
     db.session.add(new_fast)
     db.session.commit()
-    return jsonify({"msg": "Ayuno iniciado"}), 201
+    return jsonify({"msg": "Ayuno iniciado", "fast": new_fast.serialize()}), 201
 
 @api.route('/fasting/status', methods=['GET'])
 @jwt_required()
 def get_fasting():
     user_id = get_jwt_identity()
-    # Obtenemos el último ayuno sin terminar
+    # Obtenemos el último ayuno activo
     last_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).order_by(FastingLog.id.desc()).first()
     if last_fast:
         return jsonify(last_fast.serialize()), 200
     return jsonify({"msg": "No hay ayuno activo"}), 404
+
+@api.route('/fasting/stop', methods=['PUT'])
+@jwt_required()
+def stop_fasting():
+    user_id = get_jwt_identity()
+    # Buscamos el ayuno activo para ponerle hora de fin
+    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
+    
+    if not active_fast:
+        return jsonify({"msg": "No hay un ayuno activo para terminar"}), 404
+    
+    active_fast.end_time = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"msg": "Ayuno terminado", "fast": active_fast.serialize()}), 200
+
+# --- 5. HIDRATACIÓN (SOLO AGUA) ---
+
+@api.route('/daily-log/water', methods=['POST'])
+@jwt_required()
+def add_water_log():
+    user_id = get_jwt_identity()
+    body = request.get_json()
+    
+    # Registramos solo agua. Usamos una categoría fija para filtrar luego más fácil.
+    new_water = DailyLog(
+        user_id=user_id,
+        meal_category="Hydration",
+        food_name="Water",
+        calories=0,
+        water_ml=body.get("water", 0),
+        date=datetime.utcnow().date()
+    )
+    
+    db.session.add(new_water)
+    db.session.commit()
+    return jsonify({"msg": "Agua registrada", "log": new_water.serialize()}), 201
