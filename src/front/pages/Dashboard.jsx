@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
@@ -57,9 +57,32 @@ export const Dashboard = () => {
         }
     };
 
+    // PLAN NUTRICION
+    const [plan, setPlan] = useState(null);
+
+    const loadPlan = async () => {
+        try {
+            const res = await fetch(`${backendUrl}/api/nutrition-plan`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+            if (res.ok) setPlan(data);
+
+        } catch (err) {
+            console.error("Error cargando plan:", err);
+        }
+    };
+
+    // SE AGREGÓ LOAD PLAN PARA EL PLAN DE NUTRICION
     useEffect(() => {
         if (!token) navigate("/login");
-        else loadData();
+        else {
+            loadData();
+            loadPlan();
+        }
     }, [token]);
 
     // --- 2. GUARDAR PERFIL (PUT) ---
@@ -123,6 +146,10 @@ export const Dashboard = () => {
         navigate("/login");
     };
 
+    // CALCULAR EL PROGRESO Y CALORIAS RESTANTES
+    const progress = plan ? (calories / plan.calories) * 100 : 0;
+    const remaining = plan ? plan.calories - calories : 0;
+
     return (
         <div className="bg-light min-vh-100">
             {/* Navbar Bootstrap Verde */}
@@ -150,6 +177,74 @@ export const Dashboard = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* PLAN NUTRICIONAL  */}
+                <div>
+                    {plan && (
+                        <div className="card shadow-sm border-0 p-4 mb-4">
+                            <h5 className="fw-bold text-success mb-3">Plan Nutricional Personalizado</h5>
+
+                            <div className="row text-center">
+                                <div className="col">
+                                    <h4>{plan.calories}</h4>
+                                    <small>Calorías objetivo</small>
+                                </div>
+                                <div className="col">
+                                    <h4>{plan.protein}g</h4>
+                                    <small>Proteína</small>
+                                </div>
+                                <div className="col">
+                                    <h4>{plan.carbs}g</h4>
+                                    <small>Carbohidratos</small>
+                                </div>
+                                <div className="col">
+                                    <h4>{plan.fat}g</h4>
+                                    <small>Grasas</small>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* PROGRESO BARRA */}
+                <div>
+                    {plan && (
+                        <div className="card shadow-sm border-0 p-4 mb-4">
+
+                            <h5 className="fw-bold text-success mb-3">
+                                Progreso Diario
+                            </h5>
+
+                            {/* Texto resumen */}
+                            <div className="d-flex justify-content-between mb-2">
+                                <small className="fw-bold text-muted">
+                                    {calories} / {plan.calories} kcal
+                                </small>
+                                <small className={`fw-bold ${remaining < 0 ? "text-danger" : "text-success"}`}>
+                                    {remaining < 0 ? `+${Math.abs(remaining)} exceso` : `${remaining} restantes`}
+                                </small>
+                            </div>
+
+                            {/* Barra */}
+                            <div className="progress" style={{ height: "12px" }}>
+                                <div
+                                    className={`progress-bar ${progress > 100 ? "bg-danger" : "bg-success"
+                                        }`}
+                                    role="progressbar"
+                                    style={{ width: `${Math.min(progress, 100)}%` }}
+                                />
+                            </div>
+
+                            {/* Mensaje inteligente */}
+                            <div className="mt-3 small fw-bold text-muted">
+                                {progress < 50 && "Vas bajo en calorías, podrías comer un poco más 🍽️"}
+                                {progress >= 50 && progress <= 100 && "Vas muy bien 👌 sigue así"}
+                                {progress > 100 && "Te excediste hoy ⚠️ intenta balancear mañana"}
+                            </div>
+
+                        </div>
+                    )}
                 </div>
 
                 <div className="row g-4">
@@ -204,13 +299,17 @@ export const Dashboard = () => {
                             </form>
 
                             <div className="row text-center mt-auto p-4 bg-success bg-opacity-10 rounded-4">
-                                <div className="col-6 border-end border-success border-opacity-25">
+                                <div className="col-4 border-end border-success border-opacity-25">
                                     <h1 className="fw-bold text-success display-4 mb-0">{calories}</h1>
                                     <p className="text-muted small fw-bold mb-0">CALORÍAS TOTALES</p>
                                 </div>
-                                <div className="col-6">
-                                    <h1 className="fw-bold text-primary display-4 mb-0">{(water / 1000).toFixed(2)}L</h1>
-                                    <p className="text-muted small fw-bold mb-0">AGUA CONSUMIDA</p>
+                                <div className="col-4">
+                                    <h1 className="fw-bold text-warning display-4 mb-0">{remaining}</h1>
+                                    <p className="text-muted small fw-bold mb-0">CALORIAS RESTANTES</p>
+                                </div>
+                                <div className="col-4">
+                                    <h1 className="fw-bold text-primary display-4 mb-0">{(water / 1000).toFixed(2)}</h1>
+                                    <p className="text-muted small fw-bold mb-0">LITROS DE AGUA</p>
                                 </div>
                             </div>
                         </div>
