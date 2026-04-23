@@ -208,6 +208,9 @@ def add_water_log():
         return jsonify({"msg": "Error interno", "error": str(e)}), 500
 
 
+# PLAN NUTRICIONAL
+
+
 def generate_nutrition_plan(user):
     if not all([user.weight, user.height, user.age]):
         return None
