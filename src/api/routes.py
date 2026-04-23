@@ -11,6 +11,7 @@ CORS(api)
 
 # --- 1. AUTENTICACIÓN ---
 
+
 @api.route('/signup', methods=['POST'])
 def handle_signup():
     body = request.get_json()
@@ -19,14 +20,16 @@ def handle_signup():
 
     # Usamos scrypt como tienes en tu DB
     password_hash = generate_password_hash(body["password"], method='scrypt')
-    new_user = User(email=body["email"], password=password_hash, is_active=True)
-    
+    new_user = User(email=body["email"],
+                    password=password_hash, is_active=True)
+
     try:
         db.session.add(new_user)
         db.session.commit()
         return jsonify({"msg": "Usuario creado"}), 201
     except:
         return jsonify({"msg": "El email ya existe"}), 400
+
 
 @api.route('/login', methods=['POST'])
 def handle_login():
@@ -37,10 +40,11 @@ def handle_login():
         # Identity como string es más seguro para JWT
         token = create_access_token(identity=str(user.id))
         return jsonify({"token": token, "user_id": user.id}), 200
-    
+
     return jsonify({"msg": "Credenciales incorrectas"}), 401
 
 # --- 2. PERFIL DE USUARIO (LA RUTA QUE FALTABA) ---
+
 
 @api.route('/user-profile', methods=['GET', 'PUT'])
 @jwt_required()
@@ -56,7 +60,7 @@ def handle_profile():
 
     if request.method == 'PUT':
         body = request.get_json()
-        
+
         # Unimos nombre y apellido para la columna 'name' del modelo
         first = body.get("first_name", "")
         last = body.get("last_name", "")
@@ -76,56 +80,60 @@ def handle_profile():
 
 # --- 3. LOGS DIARIOS (AGUA Y COMIDA) ---
 
+
 @api.route('/daily-summary', methods=['GET'])
 @jwt_required()
 def get_summary():
     user_id = get_jwt_identity()
     # Usamos la fecha actual del servidor
     today = datetime.utcnow().date()
-    
+
     # Buscamos registros filtrando por usuario y fecha
     logs = DailyLog.query.filter_by(user_id=user_id, date=today).all()
     user = User.query.get(user_id)
-    
+
     # Sumas blindadas contra valores None
     total_w = sum(l.water_ml for l in logs if l.water_ml is not None)
     total_c = sum(l.calories for l in logs if l.calories is not None)
-    
+
     return jsonify({
         "total_calories": total_c,
         "total_water": total_w,
         "diet_type": user.diet_type if user else None
     }), 200
 
+
 @api.route('/daily-log', methods=['POST'])
 @jwt_required()
 def add_log():
     user_id = get_jwt_identity()
     body = request.get_json()
-    
-    # Mapeamos lo que viene del front (category, food, water) 
+
+    # Mapeamos lo que viene del front (category, food, water)
     # a lo que pide la DB (meal_category, food_name, water_ml)
     new_log = DailyLog(
         user_id=user_id,
-        meal_category=body.get("category"), 
+        meal_category=body.get("category"),
         food_name=body.get("food"),
         calories=body.get("calories", 0),
-        water_ml=body.get("water", 0) 
+        water_ml=body.get("water", 0)
     )
-    
+
     db.session.add(new_log)
     db.session.commit()
     return jsonify({"msg": "Registro guardado", "log": new_log.serialize()}), 201
 
 # --- 4. AYUNO ---
 
+
 @api.route('/fasting/start', methods=['POST'])
 @jwt_required()
 def start_fasting():
     user_id = get_jwt_identity()
-    
+
     # Verificamos si ya existe un ayuno sin terminar para este usuario
-    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
+    active_fast = FastingLog.query.filter_by(
+        user_id=user_id, end_time=None).first()
     if active_fast:
         return jsonify({"msg": "Ya tienes un ayuno en curso"}), 400
 
@@ -134,31 +142,36 @@ def start_fasting():
     db.session.commit()
     return jsonify({"msg": "Ayuno iniciado", "fast": new_fast.serialize()}), 201
 
+
 @api.route('/fasting/status', methods=['GET'])
 @jwt_required()
 def get_fasting():
     user_id = get_jwt_identity()
     # Obtenemos el último ayuno activo
-    last_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).order_by(FastingLog.id.desc()).first()
+    last_fast = FastingLog.query.filter_by(
+        user_id=user_id, end_time=None).order_by(FastingLog.id.desc()).first()
     if last_fast:
         return jsonify(last_fast.serialize()), 200
     return jsonify({"msg": "No hay ayuno activo"}), 404
+
 
 @api.route('/fasting/stop', methods=['PUT'])
 @jwt_required()
 def stop_fasting():
     user_id = get_jwt_identity()
     # Buscamos el ayuno activo para ponerle hora de fin
-    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
-    
+    active_fast = FastingLog.query.filter_by(
+        user_id=user_id, end_time=None).first()
+
     if not active_fast:
         return jsonify({"msg": "No hay un ayuno activo para terminar"}), 404
-    
+
     active_fast.end_time = datetime.utcnow()
     db.session.commit()
     return jsonify({"msg": "Ayuno terminado", "fast": active_fast.serialize()}), 200
 
 # --- 5. HIDRATACIÓN (SOLO AGUA) ---
+
 
 @api.route('/daily-log/water', methods=['POST'])
 @jwt_required()
@@ -166,7 +179,7 @@ def add_water_log():
     try:
         user_id = get_jwt_identity()
         body = request.get_json()
-        
+
         # 1. Validamos que recibimos el dato
         water_amount = body.get("water")
         if water_amount is None:
@@ -180,15 +193,124 @@ def add_water_log():
             food_name="Water Consumption",
             calories=0,
             water_ml=int(water_amount),
-            date=datetime.utcnow().date() 
+            date=datetime.utcnow().date()
         )
-        
+
         db.session.add(new_log)
         db.session.commit()
-        
+
         return jsonify({"msg": "¡Guardado con éxito!", "total": water_amount}), 201
-        
+
     except Exception as e:
         db.session.rollback()
-        print(f"Error real en consola: {str(e)}") # Mira tu terminal de VS Code
+        # Mira tu terminal de VS Code
+        print(f"Error real en consola: {str(e)}")
         return jsonify({"msg": "Error interno", "error": str(e)}), 500
+
+
+def generate_nutrition_plan(user):
+    if not all([user.weight, user.height, user.age]):
+        return None
+
+    tmb = (10 * user.weight) + (6.25 * user.height) - (5 * user.age) + 5
+
+    # 🎯 Objetivo
+    if user.goal == "lose":
+        calories = tmb - 500
+    elif user.goal == "gain":
+        calories = tmb + 300
+    else:
+        calories = tmb
+
+    # Guardar en DB 👇
+    user.daily_calories_limit = int(calories)
+
+    # 🥗 Macros
+    protein = user.weight * 2
+    fat = user.weight * 0.8
+    carbs = (calories - (protein * 4 + fat * 9)) / 4
+
+    return {
+        "calories": int(calories),
+        "protein": int(protein),
+        "fat": int(fat),
+        "carbs": int(carbs)
+    }
+
+
+@api.route('/nutrition-plan', methods=['GET'])
+@jwt_required()
+def get_nutrition_plan():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    plan = generate_nutrition_plan(user)
+
+    if not plan:
+        return jsonify({"msg": "Faltan datos"}), 400
+
+    user.daily_calories_limit = plan["calories"]
+    db.session.commit()
+
+    return jsonify(plan), 200
+
+
+# RECOMENDACIONES
+
+def generate_ai_recommendations(user, total_calories, total_water):
+    recommendations = []
+
+    # Calorías
+    if user.daily_calories_limit:
+        if total_calories < user.daily_calories_limit * 0.7:
+            recommendations.append(
+                "Estás comiendo muy poco hoy, considera aumentar tu ingesta 🍽️")
+        elif total_calories > user.daily_calories_limit:
+            recommendations.append(
+                "Has superado tus calorías, intenta equilibrar tus próximas comidas ⚠️")
+        else:
+            recommendations.append("Vas muy bien con tus calorías 👌")
+
+    # Agua
+    if total_water < 1500:
+        recommendations.append("Te falta hidratación 💧 intenta beber más agua")
+    elif total_water >= 2000:
+        recommendations.append("Excelente hidratación hoy 💦")
+
+    # Objetivo
+    if user.goal == "lose":
+        recommendations.append(
+            "Prioriza proteína y reduce azúcares para perder grasa 🔥")
+    elif user.goal == "gain":
+        recommendations.append(
+            "Aumenta proteína y calorías para ganar músculo 💪")
+
+    # Tipo de dieta
+    if user.diet_type == "Keto":
+        recommendations.append(
+            "Evita carbohidratos y enfócate en grasas saludables 🥑")
+    elif user.diet_type == "Vegana":
+        recommendations.append(
+            "Asegura proteína con legumbres, tofu y quinoa 🌱")
+
+    return recommendations
+
+
+@api.route('/ai-recommendations', methods=['GET'])
+@jwt_required()
+def get_ai_recommendations():
+    user_id = get_jwt_identity()
+    today = datetime.utcnow().date()
+
+    user = User.query.get(user_id)
+    logs = DailyLog.query.filter_by(user_id=user_id, date=today).all()
+
+    total_calories = sum(l.calories for l in logs)
+    total_water = sum(l.water_ml for l in logs)
+
+    recommendations = generate_ai_recommendations(
+        user, total_calories, total_water)
+
+    return jsonify({
+        "recommendations": recommendations
+    }), 200
