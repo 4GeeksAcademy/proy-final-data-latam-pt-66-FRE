@@ -4,7 +4,7 @@ export const NutritionPage = () => {
     const [calories, setCalories] = useState(0);
     const [dietType, setDietType] = useState("Equilibrada");
     const [foodEntry, setFoodEntry] = useState({ food: "", calories: "" });
-    
+
     const token = sessionStorage.getItem("token");
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -51,22 +51,22 @@ export const NutritionPage = () => {
                         <form onSubmit={handleAddFood}>
                             <div className="mb-3">
                                 <label className="small fw-bold">NOMBRE DEL ALIMENTO</label>
-                                <input 
-                                    type="text" className="form-control" 
+                                <input
+                                    type="text" className="form-control"
                                     placeholder="Ej: Pechuga de pollo"
                                     value={foodEntry.food}
-                                    onChange={e => setFoodEntry({...foodEntry, food: e.target.value})}
-                                    required 
+                                    onChange={e => setFoodEntry({ ...foodEntry, food: e.target.value })}
+                                    required
                                 />
                             </div>
                             <div className="mb-3">
                                 <label className="small fw-bold">CALORÍAS (KCAL)</label>
-                                <input 
-                                    type="number" className="form-control" 
+                                <input
+                                    type="number" className="form-control"
                                     placeholder="0"
                                     value={foodEntry.calories}
-                                    onChange={e => setFoodEntry({...foodEntry, calories: e.target.value})}
-                                    required 
+                                    onChange={e => setFoodEntry({ ...foodEntry, calories: e.target.value })}
+                                    required
                                 />
                             </div>
                             <button className="btn btn-success w-100 fw-bold shadow-sm">AÑADIR A MI DÍA</button>
