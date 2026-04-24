@@ -125,51 +125,77 @@ def add_log():
 
 # --- 4. AYUNO ---
 
+@api.route('/fasting/status', methods=['GET'])
+@jwt_required()
+def get_fasting_status():
+    """Obtiene el ayuno activo actual del usuario si existe."""
+    user_id = get_jwt_identity()
+    # Buscamos el último registro que no tenga end_time (ayuno en curso)
+    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
+    
+    if active_fast:
+        return jsonify(active_fast.serialize()), 200
+    return jsonify(None), 200
+
 
 @api.route('/fasting/start', methods=['POST'])
 @jwt_required()
 def start_fasting():
+    """Inicia un nuevo registro de ayuno."""
     user_id = get_jwt_identity()
+    
+    # Verificación de seguridad para evitar múltiples ayunos abiertos
+    exists = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
+    if exists:
+        return jsonify({"msg": "Ya tienes un ayuno activo"}), 400
 
-    # Verificamos si ya existe un ayuno sin terminar para este usuario
-    active_fast = FastingLog.query.filter_by(
-        user_id=user_id, end_time=None).first()
-    if active_fast:
-        return jsonify({"msg": "Ya tienes un ayuno en curso"}), 400
-
-    new_fast = FastingLog(user_id=user_id, start_time=datetime.utcnow())
-    db.session.add(new_fast)
-    db.session.commit()
-    return jsonify({"msg": "Ayuno iniciado", "fast": new_fast.serialize()}), 201
-
-
-@api.route('/fasting/status', methods=['GET'])
-@jwt_required()
-def get_fasting():
-    user_id = get_jwt_identity()
-    # Obtenemos el último ayuno activo
-    last_fast = FastingLog.query.filter_by(
-        user_id=user_id, end_time=None).order_by(FastingLog.id.desc()).first()
-    if last_fast:
-        return jsonify(last_fast.serialize()), 200
-    return jsonify({"msg": "No hay ayuno activo"}), 404
+    new_fast = FastingLog(
+        user_id=user_id, 
+        start_time=datetime.utcnow()
+    )
+    
+    try:
+        db.session.add(new_fast)
+        db.session.commit()
+        return jsonify(new_fast.serialize()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al iniciar ayuno", "error": str(e)}), 500
 
 
 @api.route('/fasting/stop', methods=['PUT'])
 @jwt_required()
 def stop_fasting():
+    """Detiene el ayuno actual y calcula la duración total."""
     user_id = get_jwt_identity()
-    # Buscamos el ayuno activo para ponerle hora de fin
-    active_fast = FastingLog.query.filter_by(
-        user_id=user_id, end_time=None).first()
+    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
 
     if not active_fast:
-        return jsonify({"msg": "No hay un ayuno activo para terminar"}), 404
+        return jsonify({"msg": "No se encontró un ayuno activo para detener"}), 404
 
+    # Marcamos la hora de finalización
     active_fast.end_time = datetime.utcnow()
-    db.session.commit()
-    return jsonify({"msg": "Ayuno terminado", "fast": active_fast.serialize()}), 200
-
+    
+    # --- CÁLCULO DE DURACIÓN ---
+    diff = active_fast.end_time - active_fast.start_time
+    total_seconds = int(diff.total_seconds())
+    
+    # Desglosamos los segundos en formato legible
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    duration_msg = f"{hours}h {minutes}m {seconds}s"
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            "msg": "Ayuno completado con éxito",
+            "duration": duration_msg,
+            "fast": active_fast.serialize()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al guardar el fin del ayuno", "error": str(e)}), 500
 # --- 5. HIDRATACIÓN (SOLO AGUA) ---
 
 
@@ -317,3 +343,49 @@ def get_ai_recommendations():
     return jsonify({
         "recommendations": recommendations
     }), 200
+
+#hitorialpage
+
+@api.route('/user-history', methods=['GET'])
+@jwt_required()
+def get_user_history():
+    user_id = get_jwt_identity()
+    history = []
+
+    # 1. Logs de Comida e Hidratación (DailyLog)
+    daily_logs = DailyLog.query.filter_by(user_id=user_id).all()
+    for log in daily_logs:
+        # Usamos los nombres reales de tus columnas según el Admin Panel
+        categoria = getattr(log, 'meal_category', 'Comida')
+        alimento = getattr(log, 'food_name', 'Registro')
+        ml = getattr(log, 'water_ml', 0) or 0
+        cal = getattr(log, 'calories', 0) or 0
+
+        # Mapeamos al español para el frontend
+        category_name = "Hidratación" if categoria == "Hydration" else "Comida"
+        
+        history.append({
+            "date": log.date.isoformat() if log.date else datetime.utcnow().isoformat(),
+            "category": category_name,
+            "food": alimento,
+            "water": ml,
+            "calories": cal
+        })
+
+    # 2. Logs de Ayuno (FastingLog) - Ya funcionaba bien
+    fasting_logs = FastingLog.query.filter_by(user_id=user_id).filter(FastingLog.end_time != None).all()
+    for fast in fasting_logs:
+        diff = fast.end_time - fast.start_time
+        h, res = divmod(int(diff.total_seconds()), 3600)
+        m, s = divmod(res, 60)
+        
+        history.append({
+            "date": fast.end_time.isoformat(),
+            "category": "Ayuno",
+            "food": "Sesión terminada",
+            "duration": f"{h}h {m}m {s}s",
+            "calories": 0
+        })
+
+    history.sort(key=lambda x: x['date'], reverse=True)
+    return jsonify(history), 200
