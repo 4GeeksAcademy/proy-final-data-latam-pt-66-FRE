@@ -84,6 +84,15 @@ export const Navbar = () => {
                                         <span className="small fw-bold text-uppercase">Nutrición</span>
                                     </Link>
                                 </li>
+
+                                {/* SECCIÓN AGREGADA: RECETAS */}
+                                <li className="nav-item mx-2">
+                                    <Link to="/recetas" className="nav-link text-white text-center">
+                                        <i className="fas fa-utensils d-block mb-1 fs-5"></i>
+                                        <span className="small fw-bold text-uppercase">Recetas</span>
+                                    </Link>
+                                </li>
+
                                 <li className="nav-item mx-2">
                                     <Link to="/hidratacion" className="nav-link text-white text-center">
                                         <i className="fas fa-tint d-block mb-1 fs-5"></i>

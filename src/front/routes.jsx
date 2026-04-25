@@ -13,6 +13,9 @@ import { WaterPage } from "./pages/WaterPage";       // Página de Hidratación
 import { FastingPage } from "./pages/FastingPage";   // Página de Ayuno
 import { HistoryPage } from "./pages/HistoryPage";   // Página de Historial
 
+// NUEVA IMPORTACIÓN: Asegúrate de que el archivo RecipesPage.jsx exista en tu carpeta pages
+import { RecipesPage } from "./pages/RecipesPage"; 
+
 export const router = createBrowserRouter(
     createRoutesFromElements(
       /* El Layout envuelve todo para que el Navbar aparezca en todas las páginas */
@@ -26,6 +29,10 @@ export const router = createBrowserRouter(
         {/* Rutas de la Aplicación */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/nutricion" element={<NutritionPage />} />
+        
+        {/* NUEVA RUTA DE RECETAS: Ahora el clic en la Navbar encontrará este camino */}
+        <Route path="/recetas" element={<RecipesPage />} />
+
         <Route path="/hidratacion" element={<WaterPage />} />
         <Route path="/ayuno" element={<FastingPage />} />
         <Route path="/historial" element={<HistoryPage />} />
