@@ -12,7 +12,7 @@ export const RecipesPage = () => {
     const foodDatabase = {
         desayunos: [
             { 
-                name: "Panqueques de Avena", 
+                name: "Panquecas de Avena", 
                 ingredients: ["1 taza de avena", "1 plátano", "2 huevos"],
                 prep: "1. Licúa todo.\n2. Cocina en sartén 2 min por lado.", 
                 cal: 320, p: 12, img: "https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=600" 

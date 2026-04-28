@@ -13,6 +13,7 @@ const RecipeCard = ({ recipe }) => {
                     alt={name} 
                     style={{ height: "200px", objectFit: "cover" }} 
                 />
+                
                 <span className="badge bg-dark position-absolute bottom-0 end-0 m-2 opacity-75">
                     ⏱️ {time} min
                 </span>
