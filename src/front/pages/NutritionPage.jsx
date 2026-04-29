@@ -2,8 +2,23 @@ import React, { useState, useEffect } from "react";
 
 export const NutritionPage = () => {
     const [calories, setCalories] = useState(0);
+    // MACRONUTRIENTES
+    const [macros, setMacros] = useState({
+        protein: 0,
+        carbs: 0,
+        fat: 0
+    });
     const [dietType, setDietType] = useState("Equilibrada");
-    const [foodEntry, setFoodEntry] = useState({ food: "", calories: "" });
+    // const [foodEntry, setFoodEntry] = useState({ food: "", calories: "", category: "Desayuno" });
+    const [foodEntry, setFoodEntry] = useState({
+        food: "",
+        calories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
+        category: "Desayuno"
+    });
+    const [foodList, setFoodList] = useState([]);
     const [plan, setPlan] = useState(null);
     const [recommendations, setRecommendations] = useState([]);
 
@@ -18,6 +33,12 @@ export const NutritionPage = () => {
             const data = await res.json();
             setCalories(data.total_calories || 0);
             setDietType(data.diet_type || "Equilibrada");
+            // MACRONUTRIENTES
+            setMacros({
+                protein: data.protein || 0,
+                carbs: data.carbs || 0,
+                fat: data.fat || 0
+            });
         }
     };
 
@@ -37,36 +58,84 @@ export const NutritionPage = () => {
         if (res.ok) setRecommendations(data.recommendations);
     };
 
-    useEffect(() => {
-        loadNutritionData();
-        loadPlan();
-        loadRecommendations();
-    }, []);
-
-    const handleAddFood = async (e) => {
-        e.preventDefault();
+    const loadFoodList = async () => {
         const res = await fetch(`${backendUrl}/api/daily-log`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                category: "Comida",
-                food: foodEntry.food,
-                calories: parseInt(foodEntry.calories || 0),
-                water: 0
-            })
+            headers: { "Authorization": `Bearer ${token}` }
         });
+
         if (res.ok) {
-            setFoodEntry({ food: "", calories: "" });
-            loadNutritionData();
-            loadPlan();
+            const data = await res.json();
+            setFoodList(data);
         }
     };
 
-    const progress = plan ? (calories / plan.calories) * 100 : 0;
-    const remaining = plan ? plan.calories - calories : 0;
+    useEffect(() => {
+        if (!token) return;
+
+        loadNutritionData();
+        loadPlan();
+        loadRecommendations();
+        loadFoodList();
+    }, [token]);
+
+    const handleAddFood = async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch(`${backendUrl}/api/daily-log`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    category: foodEntry.category,
+                    food: foodEntry.food,
+                    calories: Number(foodEntry.calories || 0),
+
+                    // MACRONUTRIENTES
+                    protein: Number(foodEntry.protein || 0),
+                    carbs: Number(foodEntry.carbs || 0),
+                    fat: Number(foodEntry.fat || 0),
+
+                    water: 0
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.error(data.msg || "Error");
+                return;
+            }
+
+            const newItem = data.log || data;
+
+            setFoodList(prev => [...prev, newItem]);
+
+            // setFoodEntry({ food: "", calories: "", category: "Desayuno" });
+            setFoodEntry({
+                food: "",
+                calories: "",
+                // MACRONUTRIENTES
+                protein: "",
+                carbs: "",
+                fat: "",
+
+                category: "Desayuno"
+            });
+
+            await loadFoodList();
+            await loadNutritionData();
+            await loadRecommendations();
+
+        } catch (error) {
+            console.error("Error de conexión:", error);
+        }
+    };
+
+    const progress = plan?.calories ? (calories / plan.calories) * 100 : 0;
+    const remaining = plan?.calories ? plan.calories - calories : 0;
 
     return (
         <div className="container py-4">
@@ -107,8 +176,6 @@ export const NutritionPage = () => {
                             <small>Grasas</small>
                         </div>
                     </div>
-
-
 
                     {/* PROGRESO MEJORADO */}
                     <div className="mb-2 d-flex justify-content-between align-items-center">
@@ -229,6 +296,42 @@ export const NutritionPage = () => {
                                 required
                             />
 
+                            {/* MACRONUTRIENTES */}
+                            <input
+                                type="number"
+                                className="form-control mb-2"
+                                placeholder="Proteína (g)"
+                                value={foodEntry.protein}
+                                onChange={e => setFoodEntry({ ...foodEntry, protein: e.target.value })}
+                            />
+
+                            <input
+                                type="number"
+                                className="form-control mb-2"
+                                placeholder="Carbohidratos (g)"
+                                value={foodEntry.carbs}
+                                onChange={e => setFoodEntry({ ...foodEntry, carbs: e.target.value })}
+                            />
+
+                            <input
+                                type="number"
+                                className="form-control mb-3"
+                                placeholder="Grasas (g)"
+                                value={foodEntry.fat}
+                                onChange={e => setFoodEntry({ ...foodEntry, fat: e.target.value })}
+                            />
+
+                            <select
+                                className="form-control mb-3"
+                                value={foodEntry.category}
+                                onChange={e => setFoodEntry({ ...foodEntry, category: e.target.value })}
+                            >
+                                <option value="Desayuno">Desayuno</option>
+                                <option value="Comida">Comida</option>
+                                <option value="Cena">Cena</option>
+                                <option value="Colación">Colación</option>
+                            </select>
+
                             <button className="btn btn-success w-100 fw-bold">
                                 + Añadir
                             </button>
@@ -240,17 +343,73 @@ export const NutritionPage = () => {
                 <div className="col-md-7">
                     <div className="card shadow border-0 p-4 h-100 d-flex justify-content-center text-center">
                         <h2 className="fw-bold text-success">Consumidas: {calories} kcal</h2>
-                        <h2 className="fw-bold text-warning"> Restantes: {remaining} kcal</h2>
-
-                        {plan && (
-                            <p>
-                                Meta: {plan.calories} kcal
-                            </p>
-                        )}
+                        <h2 className="fw-bold text-warning"> Faltan: {remaining} kcal</h2>
                     </div>
                 </div>
 
-                {/* 🤖 RECOMENDACIONES */}
+                {/* MACRONUTRIENTES */}
+                <div className="card shadow border-0 p-3 col-12">
+                    <div className="row text-center mt-3">
+                        <div className="col">
+                            <strong>{macros.protein}g</strong>
+                            <div className="small">Proteína</div>
+                        </div>
+                        <div className="col">
+                            <strong>{macros.carbs}g</strong>
+                            <div className="small">Carbs</div>
+                        </div>
+                        <div className="col">
+                            <strong>{macros.fat}g</strong>
+                            <div className="small">Grasas</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* LISTA ALIMENTOS AGREGADOS POR CATEGORIA */}
+                <div className="card shadow border-0 p-4 mt-4">
+                    <h5 className="fw-bold text-success text-center mb-3">
+                        REGISTRO DE ALIMENTOS
+                    </h5>
+
+                    {["Desayuno", "Comida", "Cena", "Colación"].map(category => {
+                        const items = (foodList || []).filter(
+                            f => (f.category || "").trim().toLowerCase() === category.toLowerCase()
+                        ); const total = items.reduce((sum, i) => sum + Number(i.calories || 0), 0);
+
+                        return (
+                            <div key={category} className="mb-4">
+                                <div className="d-flex justify-content-between">
+                                    <h6 className="fw-bold text-success">{category}</h6>
+                                    <span className="small fw-bold">{total} kcal</span>
+                                </div>
+
+                                {items.length === 0 ? (
+                                    <p className="text-muted small">Sin registros</p>
+                                ) : (
+                                    items.map((item, i) => (
+                                        // <div key={i} className="d-flex justify-content-between border-bottom py-1 small">
+                                        //     <span>{item.food}</span>
+                                        //     <span>{item.calories} kcal</span>
+                                        // </div>
+                                        // MACRONUTRIENTES
+                                        <div key={i} className="border-bottom py-2 small">
+                                            <div className="d-flex justify-content-between">
+                                                <span>{item.food}</span>
+                                                <span>{item.calories} kcal</span>
+                                            </div>
+
+                                            <div className="text-muted small">
+                                                P: {item.protein}g | C: {item.carbs}g | G: {item.fat}g
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* RECOMENDACIONES */}
                 {recommendations.length > 0 && (
                     <div className="card shadow-sm border-0 p-4 mb-4">
                         <h5 className="fw-bold text-success mb-3 text-center">

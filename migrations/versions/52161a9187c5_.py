@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 130c2216ad90
+Revision ID: 52161a9187c5
 Revises: 
-Create Date: 2026-04-21 03:54:00.949319
+Create Date: 2026-04-29 01:14:17.066067
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '130c2216ad90'
+revision = '52161a9187c5'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -36,11 +36,14 @@ def upgrade():
     op.create_table('daily_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('date', sa.Date(), nullable=False),
-    sa.Column('meal_category', sa.String(length=50), nullable=True),
-    sa.Column('food_name', sa.String(length=200), nullable=True),
+    sa.Column('dates', sa.Date(), nullable=False),
+    sa.Column('meal_category', sa.String(length=50), nullable=False),
+    sa.Column('food_name', sa.String(length=200), nullable=False),
     sa.Column('calories', sa.Integer(), nullable=False),
     sa.Column('water_ml', sa.Integer(), nullable=False),
+    sa.Column('protein', sa.Float(), nullable=False),
+    sa.Column('carbs', sa.Float(), nullable=False),
+    sa.Column('fat', sa.Float(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

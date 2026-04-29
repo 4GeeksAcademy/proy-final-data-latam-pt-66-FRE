@@ -1,20 +1,20 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean, Integer, Float, DateTime, Date, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
+from datetime import datetime, date
 
 db = SQLAlchemy()
 
 
 class User(db.Model):
     __tablename__ = 'user'
+
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(
         String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
 
-    # Perfil y Metas
     name: Mapped[str] = mapped_column(String(100), nullable=True)
     age: Mapped[int] = mapped_column(Integer, nullable=True)
     height: Mapped[float] = mapped_column(Float, nullable=True)
@@ -23,9 +23,10 @@ class User(db.Model):
     diet_type: Mapped[str] = mapped_column(String(50), nullable=True)
     daily_calories_limit: Mapped[int] = mapped_column(Integer, default=2000)
 
-    # Relaciones
-    logs = relationship("DailyLog", back_populates="user")
-    fasts = relationship("FastingLog", back_populates="user")
+    logs = relationship("DailyLog", back_populates="user",
+                        cascade="all, delete")
+    fasts = relationship(
+        "FastingLog", back_populates="user", cascade="all, delete")
 
     def serialize(self):
         return {
@@ -43,16 +44,22 @@ class User(db.Model):
 
 class DailyLog(db.Model):
     __tablename__ = 'daily_log'
+
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    # Usamos Date para que el filtrado por "hoy" sea exacto
-    date: Mapped[datetime.date] = mapped_column(
-        Date, default=datetime.utcnow().date())
 
-    meal_category: Mapped[str] = mapped_column(String(50), nullable=True)
-    food_name: Mapped[str] = mapped_column(String(200), nullable=True)
+    # 🔥 FIX IMPORTANTE AQUÍ
+    dates: Mapped[date] = mapped_column(Date, default=date.today)
+
+    meal_category: Mapped[str] = mapped_column(String(50))
+    food_name: Mapped[str] = mapped_column(String(200))
+
     calories: Mapped[int] = mapped_column(Integer, default=0)
     water_ml: Mapped[int] = mapped_column(Integer, default=0)
+
+    protein: Mapped[float] = mapped_column(Float, default=0)
+    carbs: Mapped[float] = mapped_column(Float, default=0)
+    fat: Mapped[float] = mapped_column(Float, default=0)
 
     user = relationship("User", back_populates="logs")
 
@@ -63,14 +70,19 @@ class DailyLog(db.Model):
             "food": self.food_name,
             "calories": self.calories,
             "water": self.water_ml,
-            "date": str(self.date)
+            "protein": self.protein,
+            "carbs": self.carbs,
+            "fat": self.fat,
+            "dates": self.dates.isoformat()
         }
 
 
 class FastingLog(db.Model):
     __tablename__ = 'fasting_log'
+
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+
     start_time: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow)
     end_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)

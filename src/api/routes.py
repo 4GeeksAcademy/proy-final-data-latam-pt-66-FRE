@@ -4,7 +4,7 @@ from api.models import db, User, DailyLog, FastingLog
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, date
 
 api = Blueprint('api', __name__)
 CORS(api)
@@ -49,8 +49,8 @@ def handle_login():
 @api.route('/user-profile', methods=['GET', 'PUT'])
 @jwt_required()
 def handle_profile():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
 
     if not user:
         return jsonify({"msg": "Usuario no encontrado"}), 404
@@ -58,72 +58,104 @@ def handle_profile():
     if request.method == 'GET':
         return jsonify(user.serialize()), 200
 
-    if request.method == 'PUT':
-        body = request.get_json()
+    body = request.get_json()
+    if not body:
+        return jsonify({"msg": "Body vacío"}), 400
 
-        # Unimos nombre y apellido para la columna 'name' del modelo
-        first = body.get("first_name", "")
-        last = body.get("last_name", "")
-        if first or last:
-            user.name = f"{first} {last}".strip()
+    first = body.get("first_name", "")
+    last = body.get("last_name", "")
+    if first or last:
+        user.name = f"{first} {last}".strip()
 
-        # Sincronizado con tus columnas de models.py
-        user.age = body.get("age", user.age)
-        user.height = body.get("height", user.height)
-        user.weight = body.get("weight", user.weight)
-        user.diet_type = body.get("diet_type", user.diet_type)
-        user.goal = body.get("goal", user.goal)
+    user.age = body.get("age", user.age)
+    user.height = body.get("height", user.height)
+    user.weight = body.get("weight", user.weight)
+    user.diet_type = body.get("diet_type", user.diet_type)
+    user.goal = body.get("goal", user.goal)
 
-        db.session.commit()
-        return jsonify({"msg": "Perfil actualizado", "user": user.serialize()}), 200
-        return jsonify({"msg": "Perfil actualizado", "user": user.serialize()}), 200
+    db.session.commit()
 
-# --- 3. LOGS DIARIOS (AGUA Y COMIDA) ---
+    return jsonify({"msg": "Perfil actualizado", "user": user.serialize()}), 200
 
 
+# ---------------- DAILY SUMMARY ----------------
 @api.route('/daily-summary', methods=['GET'])
 @jwt_required()
 def get_summary():
-    user_id = get_jwt_identity()
-    # Usamos la fecha actual del servidor
-    today = datetime.utcnow().date()
+    user_id = int(get_jwt_identity())
+    today = date.today()
 
-    # Buscamos registros filtrando por usuario y fecha
-    logs = DailyLog.query.filter_by(user_id=user_id, date=today).all()
-    user = User.query.get(user_id)
+    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
+    user = db.session.get(User, user_id)
 
-    # Sumas blindadas contra valores None
-    total_w = sum(l.water_ml for l in logs if l.water_ml is not None)
-    total_c = sum(l.calories for l in logs if l.calories is not None)
+    total_c = sum(l.calories or 0 for l in logs)
+    total_p = sum(l.protein or 0 for l in logs)
+    total_carbs = sum(l.carbs or 0 for l in logs)
+    total_f = sum(l.fat or 0 for l in logs)
+    total_w = sum(l.water_ml or 0 for l in logs)
 
     return jsonify({
         "total_calories": total_c,
+        "protein": total_p,
+        "carbs": total_carbs,
+        "fat": total_f,
         "total_water": total_w,
         "diet_type": user.diet_type if user else None
     }), 200
 
 
+# ---------------- ADD LOG ----------------
 @api.route('/daily-log', methods=['POST'])
 @jwt_required()
 def add_log():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     body = request.get_json()
 
-    # Mapeamos lo que viene del front (category, food, water)
-    # a lo que pide la DB (meal_category, food_name, water_ml)
-    new_log = DailyLog(
-        user_id=user_id,
-        meal_category=body.get("category"),
-        food_name=body.get("food"),
-        calories=body.get("calories", 0),
-        water_ml=body.get("water", 0)
-    )
+    if not body:
+        return jsonify({"msg": "Body vacío"}), 400
 
-    db.session.add(new_log)
-    db.session.commit()
-    return jsonify({"msg": "Registro guardado", "log": new_log.serialize()}), 201
+    food = (body.get("food") or "").strip()
+    category = (body.get("category") or "").strip()
+
+    if not food or not category:
+        return jsonify({"msg": "Faltan datos"}), 400
+
+    try:
+        new_log = DailyLog(
+            user_id=user_id,
+            meal_category=category,
+            food_name=food,
+            calories=int(body.get("calories", 0)),
+            protein=float(body.get("protein", 0)),
+            carbs=float(body.get("carbs", 0)),
+            fat=float(body.get("fat", 0)),
+            water_ml=int(body.get("water", 0)),
+            dates=date.today()
+        )
+
+        db.session.add(new_log)
+        db.session.commit()
+
+        return jsonify({"log": new_log.serialize()}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error", "error": str(e)}), 500
+
+
+@api.route('/daily-log', methods=['GET'])
+@jwt_required()
+def get_daily_log():
+    user_id = int(get_jwt_identity())
+    today = date.today()
+
+    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
+
+    return jsonify([log.serialize() for log in logs]), 200
+
 
 # --- 4. AYUNO ---
+
 
 @api.route('/fasting/status', methods=['GET'])
 @jwt_required()
@@ -131,8 +163,9 @@ def get_fasting_status():
     """Obtiene el ayuno activo actual del usuario si existe."""
     user_id = get_jwt_identity()
     # Buscamos el último registro que no tenga end_time (ayuno en curso)
-    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
-    
+    active_fast = FastingLog.query.filter_by(
+        user_id=user_id, end_time=None).first()
+
     if active_fast:
         return jsonify(active_fast.serialize()), 200
     return jsonify(None), 200
@@ -143,17 +176,17 @@ def get_fasting_status():
 def start_fasting():
     """Inicia un nuevo registro de ayuno."""
     user_id = get_jwt_identity()
-    
+
     # Verificación de seguridad para evitar múltiples ayunos abiertos
     exists = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
     if exists:
         return jsonify({"msg": "Ya tienes un ayuno activo"}), 400
 
     new_fast = FastingLog(
-        user_id=user_id, 
+        user_id=user_id,
         start_time=datetime.utcnow()
     )
-    
+
     try:
         db.session.add(new_fast)
         db.session.commit()
@@ -168,24 +201,25 @@ def start_fasting():
 def stop_fasting():
     """Detiene el ayuno actual y calcula la duración total."""
     user_id = get_jwt_identity()
-    active_fast = FastingLog.query.filter_by(user_id=user_id, end_time=None).first()
+    active_fast = FastingLog.query.filter_by(
+        user_id=user_id, end_time=None).first()
 
     if not active_fast:
         return jsonify({"msg": "No se encontró un ayuno activo para detener"}), 404
 
     # Marcamos la hora de finalización
     active_fast.end_time = datetime.utcnow()
-    
+
     # --- CÁLCULO DE DURACIÓN ---
     diff = active_fast.end_time - active_fast.start_time
     total_seconds = int(diff.total_seconds())
-    
+
     # Desglosamos los segundos en formato legible
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    
+
     duration_msg = f"{hours}h {minutes}m {seconds}s"
-    
+
     try:
         db.session.commit()
         return jsonify({
@@ -219,7 +253,7 @@ def add_water_log():
             food_name="Water Consumption",
             calories=0,
             water_ml=int(water_amount),
-            date=datetime.utcnow().date()
+            dates=datetime.utcnow().date()
         )
 
         db.session.add(new_log)
@@ -332,7 +366,7 @@ def get_ai_recommendations():
     today = datetime.utcnow().date()
 
     user = User.query.get(user_id)
-    logs = DailyLog.query.filter_by(user_id=user_id, date=today).all()
+    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
 
     total_calories = sum(l.calories for l in logs)
     total_water = sum(l.water_ml for l in logs)
@@ -344,7 +378,8 @@ def get_ai_recommendations():
         "recommendations": recommendations
     }), 200
 
-#hitorialpage
+# hitorialpage
+
 
 @api.route('/user-history', methods=['GET'])
 @jwt_required()
@@ -363,9 +398,9 @@ def get_user_history():
 
         # Mapeamos al español para el frontend
         category_name = "Hidratación" if categoria == "Hydration" else "Comida"
-        
+
         history.append({
-            "date": log.date.isoformat() if log.date else datetime.utcnow().isoformat(),
+            "dates": log.dates.isoformat() if log.dates else datetime.utcnow().isoformat(),
             "category": category_name,
             "food": alimento,
             "water": ml,
@@ -373,19 +408,20 @@ def get_user_history():
         })
 
     # 2. Logs de Ayuno (FastingLog) - Ya funcionaba bien
-    fasting_logs = FastingLog.query.filter_by(user_id=user_id).filter(FastingLog.end_time != None).all()
+    fasting_logs = FastingLog.query.filter_by(
+        user_id=user_id).filter(FastingLog.end_time != None).all()
     for fast in fasting_logs:
         diff = fast.end_time - fast.start_time
         h, res = divmod(int(diff.total_seconds()), 3600)
         m, s = divmod(res, 60)
-        
+
         history.append({
-            "date": fast.end_time.isoformat(),
+            "dates": fast.end_time.isoformat(),
             "category": "Ayuno",
             "food": "Sesión terminada",
             "duration": f"{h}h {m}m {s}s",
             "calories": 0
         })
 
-    history.sort(key=lambda x: x['date'], reverse=True)
+    history.sort(key=lambda x: x['dates'], reverse=True)
     return jsonify(history), 200

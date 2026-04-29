@@ -33,7 +33,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # 2. CONFIGURACIÓN DE JWT (Tarea: Autenticación)
 # Esta es la llave que firma los tokens de tus usuarios
-app.config["JWT_SECRET_KEY"] = "super-secret-key-raymon-2026" 
+app.config["JWT_SECRET_KEY"] = "super-secret-key-raymon-2026"
 jwt = JWTManager(app)
 
 MIGRATE = Migrate(app, db, compare_type=True)
@@ -49,11 +49,15 @@ setup_commands(app)
 app.register_blueprint(api, url_prefix='/api')
 
 # Handle/serialize errors like a JSON object
+
+
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
+
+
 @app.route('/')
 def sitemap():
     if ENV == "development":
@@ -61,6 +65,8 @@ def sitemap():
     return send_from_directory(static_file_dir, 'index.html')
 
 # any other endpoint will try to serve it like a static file
+
+
 @app.route('/<path:path>', methods=['GET'])
 def serve_any_other_file(path):
     if not os.path.isfile(os.path.join(static_file_dir, path)):
@@ -68,6 +74,7 @@ def serve_any_other_file(path):
     response = send_from_directory(static_file_dir, path)
     response.cache_control.max_age = 0  # avoid cache memory
     return response
+
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
