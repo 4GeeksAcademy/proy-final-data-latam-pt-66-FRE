@@ -9,7 +9,6 @@ export const NutritionPage = () => {
         fat: 0
     });
     const [dietType, setDietType] = useState("Equilibrada");
-    // const [foodEntry, setFoodEntry] = useState({ food: "", calories: "", category: "Desayuno" });
     const [foodEntry, setFoodEntry] = useState({
         food: "",
         calories: "",
@@ -21,6 +20,9 @@ export const NutritionPage = () => {
     const [foodList, setFoodList] = useState([]);
     const [plan, setPlan] = useState(null);
     const [recommendations, setRecommendations] = useState([]);
+    // RECOMENDACIONES SET INTERVAL
+    const [currentRecIndex, setCurrentRecIndex] = useState(0);
+    const [showModal, setShowModal] = useState(false);
 
     const token = sessionStorage.getItem("token");
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -77,6 +79,23 @@ export const NutritionPage = () => {
         loadRecommendations();
         loadFoodList();
     }, [token]);
+
+
+    // RECOMENDATIONS SET INTERVAL
+    useEffect(() => {
+        if (!recommendations.length) return;
+
+        // Mostrar modal cuando llegan recomendaciones
+        setShowModal(true);
+
+        const interval = setInterval(() => {
+            setCurrentRecIndex(prev =>
+                (prev + 1) % recommendations.length
+            );
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [recommendations]);
 
     const handleAddFood = async (e) => {
         e.preventDefault();
@@ -555,18 +574,37 @@ export const NutritionPage = () => {
 
                 </div>
 
-                {/* RECOMENDACIONES */}
-                {recommendations.length > 0 && (
-                    <div className="card shadow-sm border-0 p-4 mb-4">
-                        <h5 className="fw-bold text-success mb-3 text-center">
-                            RECOMENDACIONES
-                        </h5>
+                {/* RECOMENDACIONES SET INTERVAL */}
+                {showModal && recommendations.length > 0 && (
+                    <div
+                        style={{
+                            position: "fixed",
+                            bottom: "20px",
+                            right: "20px",
+                            zIndex: 9999,
+                            width: "300px"
+                        }}
+                    >
+                        <div className="card shadow-lg border-0">
+                            <div className="card-body text-center">
 
-                        {recommendations.map((rec, i) => (
-                            <div key={i} className="alert alert-light border small mb-2 text-center">
-                                {rec}
+                                <h6 className="fw-bold text-success mb-2">
+                                    Recomendación
+                                </h6>
+
+                                <p className="small mb-3">
+                                    {recommendations[currentRecIndex]}
+                                </p>
+
+                                <button
+                                    className="btn btn-sm btn-outline-danger w-100"
+                                    onClick={() => setShowModal(false)}
+                                >
+                                    Cerrar
+                                </button>
+
                             </div>
-                        ))}
+                        </div>
                     </div>
                 )}
 
