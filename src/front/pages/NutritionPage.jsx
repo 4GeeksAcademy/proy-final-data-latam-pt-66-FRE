@@ -132,7 +132,6 @@ export const NutritionPage = () => {
 
             setFoodList(prev => [...prev, newItem]);
 
-            // setFoodEntry({ food: "", calories: "", category: "Desayuno" });
             setFoodEntry({
                 food: "",
                 calories: "",
@@ -237,16 +236,6 @@ export const NutritionPage = () => {
     const progress = plan?.calories ? (calories / plan.calories) * 100 : 0;
     const remaining = plan?.calories ? plan.calories - calories : 0;
 
-    const proteinProgress = plan?.protein ? (macros.protein / plan.protein) * 100 : 0;
-    const carbsProgress = plan?.carbs ? (macros.carbs / plan.carbs) * 100 : 0;
-    const fatProgress = plan?.fat ? (macros.fat / plan.fat) * 100 : 0;
-
-    const getBarColor = (progress) => {
-        if (progress < 70) return "bg-warning";   // bajo
-        if (progress <= 100) return "bg-success"; // ideal
-        return "bg-danger";                       // exceso
-    };
-
     const CircularProgress = ({ value, max, label }) => {
         const radius = 45;
         const stroke = 8;
@@ -321,7 +310,7 @@ export const NutritionPage = () => {
     return (
         <div className="container py-4">
 
-            {/* 🔥 HEADER RESUMEN */}
+            {/* HEADER RESUMEN */}
             <div className="card shadow border-0 p-4 mb-4 bg-success text-white text-center">
                 <h5 className="fw-bold">TU DÍA NUTRICIONAL</h5>
                 <h1 className="display-4 fw-bold mb-0">{calories} kcal</h1>
@@ -331,7 +320,7 @@ export const NutritionPage = () => {
                 </div>
             </div>
 
-            {/* 📊 PLAN + PROGRESO */}
+            {/* PLAN + PROGRESO */}
             {plan && (
                 <div className="card shadow border-0 p-4 mb-4">
 
@@ -372,7 +361,7 @@ export const NutritionPage = () => {
                         </small>
                     </div>
 
-                    {/* BARRA CON ESTILO PRO */}
+                    {/* BARRA CON ESTILO PROGRESS */}
                     <div className="position-relative mb-2">
 
                         {/* Fondo */}
@@ -450,7 +439,7 @@ export const NutritionPage = () => {
                 </div>
             )}
 
-            {/* 🍽️ FORM + RESUMEN */}
+            {/* FORM + RESUMEN */}
             <div className="row g-4">
 
                 {/* FORM */}

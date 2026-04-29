@@ -48,7 +48,6 @@ class DailyLog(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 
-    # 🔥 FIX IMPORTANTE AQUÍ
     dates: Mapped[date] = mapped_column(Date, default=date.today)
 
     meal_category: Mapped[str] = mapped_column(String(50))

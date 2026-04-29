@@ -104,7 +104,7 @@ def get_summary():
     }), 200
 
 
-# ---------------- ADD LOG ----------------
+# ---------------- DAILY LOG ----------------
 @api.route('/daily-log', methods=['POST'])
 @jwt_required()
 def add_log():
@@ -317,7 +317,7 @@ def generate_nutrition_plan(user):
 
     tmb = (10 * user.weight) + (6.25 * user.height) - (5 * user.age) + 5
 
-    # 🎯 Objetivo
+    # Objetivo
     if user.goal == "lose":
         calories = tmb - 500
     elif user.goal == "gain":
@@ -325,10 +325,10 @@ def generate_nutrition_plan(user):
     else:
         calories = tmb
 
-    # Guardar en DB 👇
+    # Guardar en DB
     user.daily_calories_limit = int(calories)
 
-    # 🥗 Macros
+    # Macros
     protein = user.weight * 2
     fat = user.weight * 0.8
     carbs = (calories - (protein * 4 + fat * 9)) / 4
