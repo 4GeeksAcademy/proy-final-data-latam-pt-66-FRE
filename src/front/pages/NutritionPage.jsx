@@ -247,6 +247,77 @@ export const NutritionPage = () => {
         return "bg-danger";                       // exceso
     };
 
+    const CircularProgress = ({ value, max, label }) => {
+        const radius = 45;
+        const stroke = 8;
+        const normalizedRadius = radius - stroke * 0.5;
+        const circumference = normalizedRadius * 2 * Math.PI;
+
+        const percentage = max ? (value / max) * 100 : 0;
+        const strokeDashoffset =
+            circumference - (Math.min(percentage, 100) / 100) * circumference;
+
+        return (
+            <div className="text-center">
+                <svg height={radius * 2} width={radius * 2}>
+                    {/* Fondo */}
+                    <circle
+                        stroke="#e9ecef"
+                        fill="transparent"
+                        strokeWidth={stroke}
+                        r={normalizedRadius}
+                        cx={radius}
+                        cy={radius}
+                    />
+
+                    {/* Progreso */}
+                    <circle
+                        stroke={
+                            percentage < 70
+                                ? "#ffc107"
+                                : percentage <= 100
+                                    ? "#28a745"
+                                    : "#dc3545"
+                        }
+                        fill="transparent"
+                        strokeWidth={stroke}
+                        strokeDasharray={circumference + " " + circumference}
+                        style={{
+                            strokeDashoffset,
+                            transition: "stroke-dashoffset 0.6s ease"
+                        }}
+                        strokeLinecap="round"
+                        r={normalizedRadius}
+                        cx={radius}
+                        cy={radius}
+                    />
+
+                    {/* TEXTO CENTRAL */}
+                    <text
+                        x="50%"
+                        y="50%"
+                        dy="0.3em"
+                        textAnchor="middle"
+                        fontSize="12"
+                        fontWeight="bold"
+                    >
+                        {Math.round(percentage)}%
+                    </text>
+                </svg>
+
+                <div className="small mt-2 fw-bold">
+                    {label}
+                </div>
+
+                <div className="small text-muted">
+                    {value}g / {max}g
+                </div>
+            </div>
+        );
+    };
+
+
+
     return (
         <div className="container py-4">
 
@@ -524,54 +595,36 @@ export const NutritionPage = () => {
                 <div className="card shadow border-0 p-4 col-12">
 
                     <h6 className="fw-bold text-center text-success mb-4">
-                        PROGRESO MACRONUTRIENTES
+                        MACRONUTRIENTES
                     </h6>
 
-                    {/* PROTEÍNA */}
-                    <div className="mb-3">
-                        <div className="d-flex justify-content-between small fw-bold">
-                            <span>Proteína</span>
-                            <span>{macros.protein}g / {plan?.protein}g</span>
-                        </div>
+                    <div className="row text-center">
 
-                        <div className="progress" style={{ height: "10px" }}>
-                            <div
-                                className={`progress-bar ${getBarColor(proteinProgress)}`}
-                                style={{ width: `${Math.min(proteinProgress, 100)}%` }}
+                        <div className="col">
+                            <CircularProgress
+                                value={macros.protein}
+                                max={plan?.protein}
+                                label="Proteína"
                             />
                         </div>
-                    </div>
 
-                    {/* CARBS */}
-                    <div className="mb-3">
-                        <div className="d-flex justify-content-between small fw-bold">
-                            <span>Carbohidratos</span>
-                            <span>{macros.carbs}g / {plan?.carbs}g</span>
-                        </div>
-
-                        <div className="progress" style={{ height: "10px" }}>
-                            <div
-                                className={`progress-bar ${getBarColor(carbsProgress)}`}
-                                style={{ width: `${Math.min(carbsProgress, 100)}%` }}
+                        <div className="col">
+                            <CircularProgress
+                                value={macros.carbs}
+                                max={plan?.carbs}
+                                label="Carbs"
                             />
                         </div>
-                    </div>
 
-                    {/* GRASAS */}
-                    <div className="mb-3">
-                        <div className="d-flex justify-content-between small fw-bold">
-                            <span>Grasas</span>
-                            <span>{macros.fat}g / {plan?.fat}g</span>
-                        </div>
-
-                        <div className="progress" style={{ height: "10px" }}>
-                            <div
-                                className={`progress-bar ${getBarColor(fatProgress)}`}
-                                style={{ width: `${Math.min(fatProgress, 100)}%` }}
+                        <div className="col">
+                            <CircularProgress
+                                value={macros.fat}
+                                max={plan?.fat}
+                                label="Grasas"
                             />
                         </div>
-                    </div>
 
+                    </div>
                 </div>
 
                 {/* RECOMENDACIONES SET INTERVAL */}
