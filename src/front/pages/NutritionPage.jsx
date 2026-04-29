@@ -191,6 +191,11 @@ export const NutritionPage = () => {
     };
 
     const handleDeleteFood = async (id) => {
+
+        const confirmDelete = window.confirm("¿Seguro que quieres eliminar este alimento?");
+
+        if (!confirmDelete) return;
+
         try {
             const res = await fetch(`${backendUrl}/api/daily-log/${id}`, {
                 method: "DELETE",
