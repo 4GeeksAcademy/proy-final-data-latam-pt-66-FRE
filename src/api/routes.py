@@ -154,6 +154,45 @@ def get_daily_log():
     return jsonify([log.serialize() for log in logs]), 200
 
 
+@api.route('/daily-log/<int:log_id>', methods=['PUT'])
+@jwt_required()
+def update_log(log_id):
+    user_id = int(get_jwt_identity())
+    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
+
+    if not log:
+        return jsonify({"msg": "Registro no encontrado"}), 404
+
+    body = request.get_json()
+
+    log.food_name = body.get("food", log.food_name)
+    log.meal_category = body.get("category", log.meal_category)
+    log.calories = int(body.get("calories", log.calories))
+
+    log.protein = float(body.get("protein", log.protein))
+    log.carbs = float(body.get("carbs", log.carbs))
+    log.fat = float(body.get("fat", log.fat))
+
+    db.session.commit()
+
+    return jsonify({"msg": "Actualizado", "log": log.serialize()}), 200
+
+
+@api.route('/daily-log/<int:log_id>', methods=['DELETE'])
+@jwt_required()
+def delete_log(log_id):
+    user_id = int(get_jwt_identity())
+    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
+
+    if not log:
+        return jsonify({"msg": "Registro no encontrado"}), 404
+
+    db.session.delete(log)
+    db.session.commit()
+
+    return jsonify({"msg": "Eliminado correctamente"}), 200
+
+
 # --- 4. AYUNO ---
 
 
@@ -230,6 +269,7 @@ def stop_fasting():
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": "Error al guardar el fin del ayuno", "error": str(e)}), 500
+
 # --- 5. HIDRATACIÓN (SOLO AGUA) ---
 
 

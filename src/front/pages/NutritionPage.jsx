@@ -134,6 +134,82 @@ export const NutritionPage = () => {
         }
     };
 
+    const [editingId, setEditingId] = useState(null);
+
+    const handleEdit = (item) => {
+        setEditingId(item.id);
+
+        setFoodEntry({
+            food: item.food,
+            calories: item.calories,
+            protein: item.protein,
+            carbs: item.carbs,
+            fat: item.fat,
+            category: item.category
+        });
+    };
+
+    const handleUpdateFood = async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch(`${backendUrl}/api/daily-log/${editingId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    food: foodEntry.food,
+                    calories: Number(foodEntry.calories),
+                    protein: Number(foodEntry.protein),
+                    carbs: Number(foodEntry.carbs),
+                    fat: Number(foodEntry.fat),
+                    category: foodEntry.category
+                })
+            });
+
+            if (!res.ok) return;
+
+            setEditingId(null);
+
+            setFoodEntry({
+                food: "",
+                calories: "",
+                protein: "",
+                carbs: "",
+                fat: "",
+                category: "Desayuno"
+            });
+
+            await loadFoodList();
+            await loadNutritionData();
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDeleteFood = async (id) => {
+        try {
+            const res = await fetch(`${backendUrl}/api/daily-log/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!res.ok) return;
+
+            setFoodList(prev => prev.filter(f => f.id !== id));
+
+            await loadNutritionData();
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const progress = plan?.calories ? (calories / plan.calories) * 100 : 0;
     const remaining = plan?.calories ? plan.calories - calories : 0;
 
@@ -222,7 +298,7 @@ export const NutritionPage = () => {
                             />
                         </div>
 
-                        {/* 🎯 Indicador de meta (línea vertical) */}
+                        {/* Indicador de meta (línea vertical) */}
                         <div
                             style={{
                                 position: "absolute",
@@ -277,7 +353,7 @@ export const NutritionPage = () => {
                     <div className="card shadow border-0 p-4 h-100">
                         <h5 className="fw-bold text-success mb-3">Registrar comida</h5>
 
-                        <form onSubmit={handleAddFood}>
+                        <form onSubmit={editingId ? handleUpdateFood : handleAddFood}>
                             <input
                                 type="text"
                                 className="form-control mb-3"
@@ -332,8 +408,9 @@ export const NutritionPage = () => {
                                 <option value="Colación">Colación</option>
                             </select>
 
+                            {/* EXTRA */}
                             <button className="btn btn-success w-100 fw-bold">
-                                + Añadir
+                                {editingId ? "Guardar cambios" : "+ Añadir"}
                             </button>
                         </form>
                     </div>
@@ -387,20 +464,38 @@ export const NutritionPage = () => {
                                     <p className="text-muted small">Sin registros</p>
                                 ) : (
                                     items.map((item, i) => (
-                                        // <div key={i} className="d-flex justify-content-between border-bottom py-1 small">
-                                        //     <span>{item.food}</span>
-                                        //     <span>{item.calories} kcal</span>
-                                        // </div>
-                                        // MACRONUTRIENTES
-                                        <div key={i} className="border-bottom py-2 small">
-                                            <div className="d-flex justify-content-between">
-                                                <span>{item.food}</span>
-                                                <span>{item.calories} kcal</span>
+                                        <div key={item.id || i} className="border-bottom py-2 small">
+
+                                            <div className="d-flex justify-content-between align-items-center">
+
+                                                {/* INFO DEL ALIMENTO */}
+                                                <div>
+                                                    <span>{item.food} - {item.calories} kcal</span>
+
+                                                    <div className="text-muted small">
+                                                        P: {item.protein}g | C: {item.carbs}g | G: {item.fat}g
+                                                    </div>
+                                                </div>
+
+                                                {/* BOTONES */}
+                                                <div>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-success me-2"
+                                                        onClick={() => handleEdit(item)}
+                                                    >
+                                                        Editar
+                                                    </button>
+
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleDeleteFood(item.id)}
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </div>
+
                                             </div>
 
-                                            <div className="text-muted small">
-                                                P: {item.protein}g | C: {item.carbs}g | G: {item.fat}g
-                                            </div>
                                         </div>
                                     ))
                                 )}
@@ -417,7 +512,7 @@ export const NutritionPage = () => {
                         </h5>
 
                         {recommendations.map((rec, i) => (
-                            <div key={i} className="alert alert-light border small mb-2">
+                            <div key={i} className="alert alert-light border small mb-2 text-center">
                                 {rec}
                             </div>
                         ))}
