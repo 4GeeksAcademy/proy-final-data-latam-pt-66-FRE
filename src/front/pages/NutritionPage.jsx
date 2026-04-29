@@ -218,6 +218,16 @@ export const NutritionPage = () => {
     const progress = plan?.calories ? (calories / plan.calories) * 100 : 0;
     const remaining = plan?.calories ? plan.calories - calories : 0;
 
+    const proteinProgress = plan?.protein ? (macros.protein / plan.protein) * 100 : 0;
+    const carbsProgress = plan?.carbs ? (macros.carbs / plan.carbs) * 100 : 0;
+    const fatProgress = plan?.fat ? (macros.fat / plan.fat) * 100 : 0;
+
+    const getBarColor = (progress) => {
+        if (progress < 70) return "bg-warning";   // bajo
+        if (progress <= 100) return "bg-success"; // ideal
+        return "bg-danger";                       // exceso
+    };
+
     return (
         <div className="container py-4">
 
@@ -429,24 +439,6 @@ export const NutritionPage = () => {
                     </div>
                 </div>
 
-                {/* MACRONUTRIENTES */}
-                <div className="card shadow border-0 p-3 col-12">
-                    <div className="row text-center mt-3">
-                        <div className="col">
-                            <strong>{macros.protein}g</strong>
-                            <div className="small">Proteína</div>
-                        </div>
-                        <div className="col">
-                            <strong>{macros.carbs}g</strong>
-                            <div className="small">Carbs</div>
-                        </div>
-                        <div className="col">
-                            <strong>{macros.fat}g</strong>
-                            <div className="small">Grasas</div>
-                        </div>
-                    </div>
-                </div>
-
                 {/* LISTA ALIMENTOS AGREGADOS POR CATEGORIA */}
                 <div className="card shadow border-0 p-4 mt-4">
                     <h5 className="fw-bold text-success text-center mb-3">
@@ -507,6 +499,60 @@ export const NutritionPage = () => {
                             </div>
                         );
                     })}
+                </div>
+
+                {/* MACRONUTRIENTES PROGRESS */}
+                <div className="card shadow border-0 p-4 col-12">
+
+                    <h6 className="fw-bold text-center text-success mb-4">
+                        PROGRESO MACRONUTRIENTES
+                    </h6>
+
+                    {/* PROTEÍNA */}
+                    <div className="mb-3">
+                        <div className="d-flex justify-content-between small fw-bold">
+                            <span>Proteína</span>
+                            <span>{macros.protein}g / {plan?.protein}g</span>
+                        </div>
+
+                        <div className="progress" style={{ height: "10px" }}>
+                            <div
+                                className={`progress-bar ${getBarColor(proteinProgress)}`}
+                                style={{ width: `${Math.min(proteinProgress, 100)}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* CARBS */}
+                    <div className="mb-3">
+                        <div className="d-flex justify-content-between small fw-bold">
+                            <span>Carbohidratos</span>
+                            <span>{macros.carbs}g / {plan?.carbs}g</span>
+                        </div>
+
+                        <div className="progress" style={{ height: "10px" }}>
+                            <div
+                                className={`progress-bar ${getBarColor(carbsProgress)}`}
+                                style={{ width: `${Math.min(carbsProgress, 100)}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* GRASAS */}
+                    <div className="mb-3">
+                        <div className="d-flex justify-content-between small fw-bold">
+                            <span>Grasas</span>
+                            <span>{macros.fat}g / {plan?.fat}g</span>
+                        </div>
+
+                        <div className="progress" style={{ height: "10px" }}>
+                            <div
+                                className={`progress-bar ${getBarColor(fatProgress)}`}
+                                style={{ width: `${Math.min(fatProgress, 100)}%` }}
+                            />
+                        </div>
+                    </div>
+
                 </div>
 
                 {/* RECOMENDACIONES */}
