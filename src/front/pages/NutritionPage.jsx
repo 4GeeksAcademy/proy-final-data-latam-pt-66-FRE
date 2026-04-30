@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export const NutritionPage = () => {
     const [calories, setCalories] = useState(0);
+
+    const formRef = useRef(null);
+    const inputRef = useRef(null);
+
     // MACRONUTRIENTES
     const [macros, setMacros] = useState({
         protein: 0,
@@ -165,6 +169,16 @@ export const NutritionPage = () => {
             fat: item.fat,
             category: item.category
         });
+
+        // 🚀 SCROLL AUTOMÁTICO AL FORM
+
+        setTimeout(() => {
+            formRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+            inputRef.current?.focus(); // auto focus
+        }, 100);
     };
 
     const handleUpdateFood = async (e) => {
@@ -233,8 +247,8 @@ export const NutritionPage = () => {
         }
     };
 
-    const progress = plan?.calories ? (calories / plan.calories) * 100 : 0;
-    const remaining = plan?.calories ? plan.calories - calories : 0;
+    const progress = plan?.calories ? (calories / plan?.calories) * 100 : 0;
+    const remaining = plan?.calories ? plan?.calories - calories : 0;
 
     const CircularProgress = ({ value, max, label }) => {
         const radius = 45;
@@ -312,11 +326,13 @@ export const NutritionPage = () => {
 
             {/* HEADER RESUMEN */}
             <div className="card shadow border-0 p-4 mb-4 bg-success text-white text-center">
-                <h5 className="fw-bold">TU DÍA NUTRICIONAL</h5>
+                <h4 className="fw-bold">TU DÍA NUTRICIONAL</h4>
                 <h1 className="display-4 fw-bold mb-0">{calories} kcal</h1>
-                <small>Consumidas hoy</small>
+                <h5>Consumidas hoy</h5>
                 <div className="mt-2">
-                    <span className="badge bg-light text-success">{dietType}</span>
+                    <span className="badge bg-light text-success fs-5 px-4 py-1 rounded-pill">
+                        {dietType}
+                    </span>
                 </div>
             </div>
 
@@ -330,110 +346,21 @@ export const NutritionPage = () => {
 
                     <div className="row text-center mb-4">
                         <div className="col">
-                            <h4>{plan.calories}</h4>
+                            <h4>{plan?.calories}</h4>
                             <small>Kcal</small>
                         </div>
                         <div className="col">
-                            <h4>{plan.protein}g</h4>
+                            <h4>{plan?.protein}g</h4>
                             <small>Proteína</small>
                         </div>
                         <div className="col">
-                            <h4>{plan.carbs}g</h4>
+                            <h4>{plan?.carbs}g</h4>
                             <small>Carbs</small>
                         </div>
                         <div className="col">
-                            <h4>{plan.fat}g</h4>
+                            <h4>{plan?.fat}g</h4>
                             <small>Grasas</small>
                         </div>
-                    </div>
-
-                    {/* PROGRESO MEJORADO */}
-                    <div className="mb-2 d-flex justify-content-between align-items-center">
-                        <small className="fw-bold text-muted">
-                            {calories} / {plan.calories} kcal
-                        </small>
-
-                        <small className={`fw-bold ${remaining < 0 ? "text-danger" : "text-success"
-                            }`}>
-                            {remaining < 0
-                                ? `+${Math.abs(remaining)} exceso`
-                                : `${remaining} restantes`}
-                        </small>
-                    </div>
-
-                    {/* BARRA CON ESTILO PROGRESS */}
-                    <div className="position-relative mb-2">
-
-                        {/* Fondo */}
-                        <div
-                            className="progress"
-                            style={{
-                                height: "14px",
-                                borderRadius: "10px",
-                                background: "#e9ecef"
-                            }}
-                        >
-                            {/* Barra dinámica */}
-                            <div
-                                className="progress-bar"
-                                style={{
-                                    width: `${Math.min(progress, 100)}%`,
-                                    transition: "width 0.6s ease",
-                                    borderRadius: "10px",
-                                    background:
-                                        progress < 50
-                                            ? "linear-gradient(90deg, #ffc107, #ff9800)"   // amarillo
-                                            : progress < 80
-                                                ? "linear-gradient(90deg, #28a745, #20c997)"   // verde
-                                                : progress <= 100
-                                                    ? "linear-gradient(90deg, #007bff, #6610f2)"   // azul
-                                                    : "linear-gradient(90deg, #dc3545, #ff6b6b)"   // rojo exceso
-                                }}
-                            />
-                        </div>
-
-                        {/* Indicador de meta (línea vertical) */}
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                left: "100%",
-                                transform: "translateX(-2px)",
-                                height: "14px",
-                                width: "2px",
-                                background: "#000",
-                                opacity: 0.2
-                            }}
-                        />
-                    </div>
-
-                    {/* MENSAJE INTELIGENTE */}
-                    <div className="mt-2 text-center small fw-bold">
-
-                        {progress < 40 && (
-                            <span className="text-warning">
-                                🍽️ Aún puedes comer más
-                            </span>
-                        )}
-
-                        {progress >= 40 && progress < 80 && (
-                            <span className="text-success">
-                                👌 Vas equilibrado
-                            </span>
-                        )}
-
-                        {progress >= 80 && progress <= 100 && (
-                            <span className="text-primary">
-                                🔥 Estás muy cerca de tu meta
-                            </span>
-                        )}
-
-                        {progress > 100 && (
-                            <span className="text-danger">
-                                ⚠️ Excediste tu objetivo
-                            </span>
-                        )}
-
                     </div>
 
                 </div>
@@ -443,12 +370,15 @@ export const NutritionPage = () => {
             <div className="row g-4">
 
                 {/* FORM */}
-                <div className="col-md-5">
+                <div className="col-md-5" ref={formRef}>
                     <div className="card shadow border-0 p-4 h-100">
-                        <h5 className="fw-bold text-success mb-3">Registrar comida</h5>
+                        <h5 className="fw-bold text-success mb-3">
+                            {editingId ? "Editar alimento" : "Registrar comida"}
+                        </h5>
 
                         <form onSubmit={editingId ? handleUpdateFood : handleAddFood}>
                             <input
+                                ref={inputRef}
                                 type="text"
                                 className="form-control mb-3"
                                 placeholder="¿Qué comiste?"
@@ -511,10 +441,106 @@ export const NutritionPage = () => {
                 </div>
 
                 {/* RESUMEN LATERAL */}
+                {/* RESUMEN PRO CON PROGRESO INTEGRADO */}
                 <div className="col-md-7">
-                    <div className="card shadow border-0 p-4 h-100 d-flex justify-content-center text-center">
-                        <h2 className="fw-bold text-success">Consumidas: {calories} kcal</h2>
-                        <h2 className="fw-bold text-warning"> Faltan: {remaining} kcal</h2>
+                    <div className="card shadow border-0 p-4 h-100 d-flex justify-content-center">
+
+                        {/* MENSAJE INTELIGENTE */}
+                        <div className="mt-2 mb-4 text-center small fw-bold">
+
+                            {progress < 40 && (
+                                <h5 className="text-warning">
+                                    ⚠️ Aún puedes comer más
+                                </h5>
+                            )}
+
+                            {progress >= 40 && progress < 80 && (
+                                <h5 className="text-success">
+                                    ⚠️ Vas equilibrado
+                                </h5>
+                            )}
+
+                            {progress >= 80 && progress <= 100 && (
+                                <h5 className="text-primary">
+                                    ⚠️ Estás muy cerca de tu meta
+                                </h5>
+                            )}
+
+                            {progress > 100 && (
+                                <h5 className="text-danger">
+                                    ⚠️ Excediste tu objetivo
+                                </h5>
+                            )}
+
+                        </div>
+
+
+                        {/* 🔥 BARRA DE CALORÍAS */}
+                        <div className="mb-4">
+
+                            <div className="d-flex justify-content-between small fw-bold mb-1">
+                                <span className="fw-bold text-muted">
+                                    {calories} / {plan?.calories} kcal
+                                </span>
+                            </div>
+
+                            <div
+                                className="progress"
+                                style={{
+                                    height: "12px",
+                                    borderRadius: "10px",
+                                    background: "#e9ecef"
+                                }}
+                            >
+                                <div
+                                    className="progress-bar"
+                                    style={{
+                                        width: `${Math.min(progress, 100)}%`,
+                                        transition: "width 0.6s ease",
+                                        borderRadius: "10px",
+                                        background:
+                                            progress < 50
+                                                ? "linear-gradient(90deg, #ffc107, #ff9800)"
+                                                : progress < 80
+                                                    ? "linear-gradient(90deg, #28a745, #20c997)"
+                                                    : progress <= 100
+                                                        ? "linear-gradient(90deg, #007bff, #6610f2)"
+                                                        : "linear-gradient(90deg, #dc3545, #ff6b6b)"
+                                    }}
+                                />
+                            </div>
+
+                        </div>
+
+                        {/* MACROS INLINE (COMPACTOS) */}
+                        <div className="row text-center">
+
+                            <div className="col">
+                                <CircularProgress
+                                    value={macros.protein}
+                                    max={plan?.protein}
+                                    label="Proteína"
+                                />
+                            </div>
+
+                            <div className="col">
+                                <CircularProgress
+                                    value={macros.carbs}
+                                    max={plan?.carbs}
+                                    label="Carbs"
+                                />
+                            </div>
+
+                            <div className="col">
+                                <CircularProgress
+                                    value={macros.fat}
+                                    max={plan?.fat}
+                                    label="Grasas"
+                                />
+                            </div>
+
+                        </div>
+
                     </div>
                 </div>
 
@@ -578,42 +604,6 @@ export const NutritionPage = () => {
                             </div>
                         );
                     })}
-                </div>
-
-                {/* MACRONUTRIENTES PROGRESS */}
-                <div className="card shadow border-0 p-4 col-12">
-
-                    <h6 className="fw-bold text-center text-success mb-4">
-                        MACRONUTRIENTES
-                    </h6>
-
-                    <div className="row text-center">
-
-                        <div className="col">
-                            <CircularProgress
-                                value={macros.protein}
-                                max={plan?.protein}
-                                label="Proteína"
-                            />
-                        </div>
-
-                        <div className="col">
-                            <CircularProgress
-                                value={macros.carbs}
-                                max={plan?.carbs}
-                                label="Carbs"
-                            />
-                        </div>
-
-                        <div className="col">
-                            <CircularProgress
-                                value={macros.fat}
-                                max={plan?.fat}
-                                label="Grasas"
-                            />
-                        </div>
-
-                    </div>
                 </div>
 
                 {/* RECOMENDACIONES SET INTERVAL */}
