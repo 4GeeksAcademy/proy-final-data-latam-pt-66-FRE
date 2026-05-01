@@ -4,72 +4,70 @@ export const RecipesPage = () => {
     const [weeklyPlan, setWeeklyPlan] = useState([]);
     const [selectedRecipe, setSelectedRecipe] = useState(null);
     const [sundayMotto, setSundayMotto] = useState("");
+    const [status, setStatus] = useState({ loading: false, msg: "" });
 
-    // --- IMAGEN BASE64 PARA SHAKSHUKA (SOLUCIÓN DEFINITIVA) ---
-    // Esta cadena de texto es la imagen real. No depende de internet.
-    const shakshukaBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBYWFRgWFhUZGRgaGhoaGRoaGhkaGhkaGhgaGhoYGhocIS4lHB4rHhkYJjgmKy8xNTU1GiQ7QDs0Py40NTEBDAwMEA8QHhISHzQrJCs0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NP/AABEIAOEA4QMBIgACEQEDEQH/xAAbAAABBQEBAAAAAAAAAAAAAAADAAECBAUGB//EADwQAAIBAgQDBgQEBQMFAQEAAAECEQAhAxIxQVFhBBIicYGRMvChsfAFE0LBUnKy4fIUI2KSorPC0uIV/8QAGQEAAwEBAQAAAAAAAAAAAAAAAQIDBAAF/8QAIhEAAgIDAQEBAQEBAQAAAAAAAAECEQMhMRIiQRMyUWH/2gAMAwEAAвому... (el resto de la cadena Base64 es muy larga, pero está incluida en el código funcional)";
+    const token = sessionStorage.getItem("token") || sessionStorage.getItem("access_token");
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+    // --- IMAGEN BASE64 SHAKSHUKA ---
+    const shakshukaBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBYWFRgWFhUZGRgaGhoaGRoaGhkaGhkaGhgaGhoYGhocIS4lHB4rHhkYJjgmKy8xNTU1GiQ7QDs0Py40NTEBDAwMEA8QHhISHzQrJCs0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NP/AABEIAOEA4QMBIgACEQEDEQH/xAAbAAABBQEBAAAAAAAAAAAAAAADAAECBAUGB//EADwQAAIBAgQDBgQEBQMFAQEAAAECEQAhAxIxQVFhBBIicYGRMvChsfAFE0LBUnKy4fIUI2KSorPC0uIV/8QAGQEAAwEBAQAAAAAAAAAAAAAAAQIDBAAF/8QAIhEAAgIDAQEBAQEBAQAAAAAAAAECEQMhMRIiQRMyUWH/2gAMAwEAAвому";
 
     const foodDatabase = {
         desayunos: [
-            { 
-                name: "Panquecas de Avena", 
-                ingredients: ["1 taza de avena", "1 plátano", "2 huevos"],
-                prep: "1. Licúa todo.\n2. Cocina en sartén 2 min por lado.", 
-                cal: 320, p: 12, img: "https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=600" 
-            },
-            { 
-                name: "Shakshuka Express", 
-                ingredients: ["2 huevos", "Salsa de tomate casera", "Pimientos"],
-                prep: "1. Calienta la salsa.\n2. Rompe los huevos encima.\n3. Tapa hasta que cuajen.", 
-                cal: 290, p: 18, 
-                // USAMOS LA VARIABLE BASE64 AQUÍ
-                img: shakshukaBase64 
-            },
-            { 
-                name: "Tostadas con Ricotta", 
-                ingredients: ["Pan integral", "Queso ricotta", "Fresas"],
-                prep: "1. Tuesta el pan.\n2. Unta el ricotta.\n3. Decora con fresas.", 
-                cal: 270, p: 14, img: "https://images.pexels.com/photos/6294354/pexels-photo-6294354.jpeg?auto=compress&cs=tinysrgb&w=600" 
-            }
+            { name: "Panquecas de Avena", ingredients: ["1 taza de avena", "1 plátano", "2 huevos"], prep: "1. Licúa todo.\n2. Cocina en sartén 2 min por lado.", cal: 320, p: 12, img: "https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=600" },
+            { name: "Shakshuka Express", ingredients: ["2 huevos", "Salsa de tomate casera", "Pimientos"], prep: "1. Calienta la salsa.\n2. Rompe los huevos encima.\n3. Tapa hasta que cuajen.", cal: 290, p: 18, img: shakshukaBase64 },
+            { name: "Tostadas con Ricotta", ingredients: ["Pan integral", "Queso ricotta", "Fresas"], prep: "1. Tuesta el pan.\n2. Unta el ricotta.\n3. Decora con fresas.", cal: 270, p: 14, img: "https://images.pexels.com/photos/6294354/pexels-photo-6294354.jpeg?auto=compress&cs=tinysrgb&w=600" }
         ],
         almuerzos: [
-            { 
-                name: "Bowl de Quinoa y Pollo", 
-                ingredients: ["Quinoa", "Pechuga", "Aguacate"],
-                prep: "1. Cocina la quinoa.\n2. Pollo a la plancha.\n3. Mezcla en un bowl.", 
-                cal: 480, p: 35, img: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=600" 
-            },
-            { 
-                name: "Salmón con Brócoli", 
-                ingredients: ["Salmón", "Salsa soja", "Brócoli"],
-                prep: "1. Sella el salmón.\n2. Cocina el brócoli al vapor.", 
-                cal: 420, p: 30, img: "https://images.pexels.com/photos/262959/pexels-photo-262959.jpeg?auto=compress&cs=tinysrgb&w=600" 
-            }
+            { name: "Bowl de Quinoa y Pollo", ingredients: ["Quinoa", "Pechuga", "Aguacate"], prep: "1. Cocina la quinoa.\n2. Pollo a la plancha.\n3. Mezcla en un bowl.", cal: 480, p: 35, img: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=600" },
+            { name: "Salmón con Brócoli", ingredients: ["Salmón", "Salsa soja", "Brócoli"], prep: "1. Sella el salmón.\n2. Cocina el brócoli al vapor.", cal: 420, p: 30, img: "https://images.pexels.com/photos/262959/pexels-photo-262959.jpeg?auto=compress&cs=tinysrgb&w=600" }
         ],
         cenas: [
-            { 
-                name: "Tacos de Lechuga", 
-                ingredients: ["Lechuga", "Pavo molido", "Pico de gallo"],
-                prep: "1. Saltea la carne.\n2. Rellena las hojas de lechuga.", 
-                cal: 290, p: 28, img: "https://images.pexels.com/photos/2092507/pexels-photo-2092507.jpeg?auto=compress&cs=tinysrgb&w=600" 
-            },
-            { 
-                name: "Sopa Miso con Tofu", 
-                ingredients: ["Pasta miso", "Tofu", "Algas nori"],
-                prep: "1. Disuelve el miso en agua caliente.\n2. Agrega tofu.", 
-                cal: 220, p: 16, img: "https://images.pexels.com/photos/884600/pexels-photo-884600.jpeg?auto=compress&cs=tinysrgb&w=600" 
-            }
+            { name: "Tacos de Lechuga", ingredients: ["Lechuga", "Pavo molido", "Pico de gallo"], prep: "1. Saltea la carne.\n2. Rellena las hojas de lechuga.", cal: 290, p: 28, img: "https://images.pexels.com/photos/2092507/pexels-photo-2092507.jpeg?auto=compress&cs=tinysrgb&w=600" },
+            { name: "Sopa Miso con Tofu", ingredients: ["Pasta miso", "Tofu", "Algas nori"], prep: "1. Disuelve el miso en agua caliente.\n2. Agrega tofu.", cal: 220, p: 16, img: "https://images.pexels.com/photos/884600/pexels-photo-884600.jpeg?auto=compress&cs=tinysrgb&w=600" }
         ]
     };
 
-    const mottos = [
-        "¡Día de recargar energías! 🔋",
-        "Disfruta tu comida trampa con moderación. 🍕",
-        "Mente sana en cuerpo sano. ✨"
-    ];
+    // --- FUNCIÓN PARA INTEGRAR CON  BACKEND ---
+    const addToDailyLog = async (recipe) => {
+        if (!token) {
+            alert("Debes estar logueado para registrar comidas");
+            return;
+        }
+        setStatus({ loading: true, msg: "Registrando..." });
+        
+        try {
+            const response = await fetch(`${backendUrl}/api/daily-log`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    food: recipe.name,
+                    calories: recipe.cal,
+                    protein: recipe.p,
+                    carbs: 0, // Podrías agregarlos a la base de datos de arriba si quieres
+                    fat: 0,
+                    category: "Comida", // O podrías pasarle si es Desayuno/Almuerzo
+                    water: 0
+                })
+            });
+
+            if (response.ok) {
+                setStatus({ loading: false, msg: "✅ ¡Añadido al historial!" });
+                setTimeout(() => setStatus({ loading: false, msg: "" }), 3000);
+            } else {
+                throw new Error("Error al guardar");
+            }
+        } catch (error) {
+            setStatus({ loading: false, msg: "❌ Error al conectar" });
+        }
+    };
 
     const generateRandomPlan = () => {
         const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+        const mottos = ["¡Día de recargar energías! 🔋", "Disfruta tu comida trampa con moderación. 🍕", "Mente sana en cuerpo sano. ✨"];
         setSundayMotto(mottos[Math.floor(Math.random() * mottos.length)]);
 
         const newPlan = days.map((day) => {
@@ -85,16 +83,14 @@ export const RecipesPage = () => {
         setWeeklyPlan(newPlan);
     };
 
-    useEffect(() => {
-        generateRandomPlan();
-    }, []);
+    useEffect(() => { generateRandomPlan(); }, []);
 
     return (
         <div className="container py-5 mt-5">
             <div className="d-flex justify-content-between align-items-center mb-5">
                 <div>
                     <h1 className="display-5 fw-bold text-success m-0">Tu Plan Semanal 🗓️</h1>
-                    <p className="text-white-50 small">Haz clic en cada plato para ver la receta.</p>
+                    <p className="text-white-50 small">Haz clic en cada plato para ver la receta y registrarla.</p>
                 </div>
                 <button className="btn btn-success rounded-pill shadow px-4" onClick={generateRandomPlan}>
                     <i className="fas fa-random me-2"></i> Mezclar Menú
@@ -119,15 +115,9 @@ export const RecipesPage = () => {
                                     <td colSpan="3" className="py-3 fs-5 italic">🌟 {sundayMotto} 🌟</td>
                                 ) : (
                                     <>
-                                        <td onClick={() => setSelectedRecipe(plan.d)} className="text-info user-select-none" style={{ cursor: 'pointer', textDecoration: 'underline' }}>
-                                            {plan.d?.name}
-                                        </td>
-                                        <td onClick={() => setSelectedRecipe(plan.a)} className="text-success user-select-none" style={{ cursor: 'pointer', textDecoration: 'underline' }}>
-                                            {plan.a?.name}
-                                        </td>
-                                        <td onClick={() => setSelectedRecipe(plan.c)} className="text-warning user-select-none" style={{ cursor: 'pointer', textDecoration: 'underline' }}>
-                                            {plan.c?.name}
-                                        </td>
+                                        <td onClick={() => setSelectedRecipe(plan.d)} className="text-info" style={{ cursor: 'pointer', textDecoration: 'underline' }}>{plan.d?.name}</td>
+                                        <td onClick={() => setSelectedRecipe(plan.a)} className="text-success" style={{ cursor: 'pointer', textDecoration: 'underline' }}>{plan.a?.name}</td>
+                                        <td onClick={() => setSelectedRecipe(plan.c)} className="text-warning" style={{ cursor: 'pointer', textDecoration: 'underline' }}>{plan.c?.name}</td>
                                     </>
                                 )}
                             </tr>
@@ -140,34 +130,45 @@ export const RecipesPage = () => {
                 <div className="mt-5 p-4 bg-dark border border-success rounded shadow-lg animate__animated animate__fadeInUp">
                     <div className="row g-4">
                         <div className="col-md-4">
-                            <img 
-                                src={selectedRecipe.img} 
-                                className="img-fluid rounded shadow border border-secondary" 
-                                alt={selectedRecipe.name} 
-                                style={{ maxHeight: "250px", width: "100%", objectFit: "cover" }} 
-                            />
+                            <img src={selectedRecipe.img} className="img-fluid rounded shadow border border-secondary" alt={selectedRecipe.name} style={{ maxHeight: "300px", width: "100%", objectFit: "cover" }} />
                         </div>
-                        <div className="col-md-8 text-white">
-                            <div className="d-flex justify-content-between align-items-start">
+                        <div className="col-md-8 text-white text-start">
+                            <div className="d-flex justify-content-between">
                                 <h2 className="text-success fw-bold">{selectedRecipe.name}</h2>
                                 <button className="btn btn-close btn-close-white" onClick={() => setSelectedRecipe(null)}></button>
                             </div>
                             <hr className="border-secondary" />
                             <div className="row">
                                 <div className="col-md-5">
-                                    <h5 className="text-info small text-uppercase fw-bold mb-3">Ingredientes</h5>
-                                    <ul className="list-unstyled">
-                                        {selectedRecipe.ingredients.map((ing, idx) => <li key={idx} className="small mb-1">• {ing}</li>)}
+                                    <h6 className="text-info fw-bold text-uppercase">Ingredientes</h6>
+                                    <ul className="list-unstyled small">
+                                        {selectedRecipe.ingredients.map((ing, idx) => <li key={idx}>• {ing}</li>)}
                                     </ul>
                                 </div>
                                 <div className="col-md-7 border-start border-secondary">
-                                    <h5 className="text-warning small text-uppercase fw-bold mb-3">Preparación</h5>
+                                    <h6 className="text-warning fw-bold text-uppercase">Preparación</h6>
                                     <p className="small" style={{ whiteSpace: "pre-line" }}>{selectedRecipe.prep}</p>
                                 </div>
                             </div>
-                            <div className="mt-4 pt-3 border-top border-secondary d-flex gap-3">
-                                <span className="badge bg-danger px-3 py-2">🔥 {selectedRecipe.cal} Kcal</span>
-                                <span className="badge bg-primary px-3 py-2">💪 {selectedRecipe.p}g Proteína</span>
+                            
+                            <div className="mt-4 pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
+                                <div className="d-flex gap-2">
+                                    <span className="badge bg-danger">🔥 {selectedRecipe.cal} Kcal</span>
+                                    <span className="badge bg-primary">💪 {selectedRecipe.p}g Proteína</span>
+                                </div>
+                                
+                                {/* BOTÓN DE INTEGRACIÓN */}
+                                <div>
+                                    {status.msg && <span className="me-3 small fw-bold">{status.msg}</span>}
+                                    <button 
+                                        className="btn btn-success fw-bold px-4 rounded-pill"
+                                        onClick={() => addToDailyLog(selectedRecipe)}
+                                        disabled={status.loading}
+                                    >
+                                        <i className="fas fa-check-circle me-2"></i>
+                                        {status.loading ? "Guardando..." : "Lo acabo de comer"}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

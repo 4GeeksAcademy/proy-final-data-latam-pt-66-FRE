@@ -79,31 +79,6 @@ def handle_profile():
 
 
 # ---------------- DAILY SUMMARY ----------------
-@api.route('/daily-summary', methods=['GET'])
-@jwt_required()
-def get_summary():
-    user_id = int(get_jwt_identity())
-    today = date.today()
-
-    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
-    user = db.session.get(User, user_id)
-
-    total_c = sum(l.calories or 0 for l in logs)
-    total_p = sum(l.protein or 0 for l in logs)
-    total_carbs = sum(l.carbs or 0 for l in logs)
-    total_f = sum(l.fat or 0 for l in logs)
-    total_w = sum(l.water_ml or 0 for l in logs)
-
-    return jsonify({
-        "total_calories": total_c,
-        "protein": total_p,
-        "carbs": total_carbs,
-        "fat": total_f,
-        "total_water": total_w,
-        "diet_type": user.diet_type if user else None
-    }), 200
-
-
 # ---------------- DAILY LOG ----------------
 @api.route('/daily-log', methods=['POST'])
 @jwt_required()
@@ -114,83 +89,35 @@ def add_log():
     if not body:
         return jsonify({"msg": "Body vacío"}), 400
 
-    food = (body.get("food") or "").strip()
-    category = (body.get("category") or "").strip()
-
-    if not food or not category:
-        return jsonify({"msg": "Faltan datos"}), 400
-
     try:
+        # Mapeo exacto a tu modelo DailyLog
         new_log = DailyLog(
             user_id=user_id,
-            meal_category=category,
-            food_name=food,
-            calories=int(body.get("calories", 0)),
-            protein=float(body.get("protein", 0)),
-            carbs=float(body.get("carbs", 0)),
-            fat=float(body.get("fat", 0)),
-            water_ml=int(body.get("water", 0)),
+            meal_category=body.get("category"), # Desayuno, Almuerzo, etc.
+            food_name=body.get("food"),
+            calories=int(body.get("calories") or 0),
+            protein=float(body.get("protein") or 0),
+            carbs=float(body.get("carbs") or 0),
+            fat=float(body.get("fat") or 0),
+            water_ml=int(body.get("water") or 0),
             dates=date.today()
         )
 
         db.session.add(new_log)
         db.session.commit()
-
-        return jsonify({"log": new_log.serialize()}), 201
+        return jsonify(new_log.serialize()), 201
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error", "error": str(e)}), 500
-
+        return jsonify({"msg": "Error al guardar", "error": str(e)}), 500
 
 @api.route('/daily-log', methods=['GET'])
 @jwt_required()
 def get_daily_log():
     user_id = int(get_jwt_identity())
-    today = date.today()
-
-    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
-
+    # Filtra por el usuario actual y la fecha de hoy
+    logs = DailyLog.query.filter_by(user_id=user_id, dates=date.today()).all()
     return jsonify([log.serialize() for log in logs]), 200
-
-
-@api.route('/daily-log/<int:log_id>', methods=['PUT'])
-@jwt_required()
-def update_log(log_id):
-    user_id = int(get_jwt_identity())
-    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
-
-    if not log:
-        return jsonify({"msg": "Registro no encontrado"}), 404
-
-    body = request.get_json()
-
-    log.food_name = body.get("food", log.food_name)
-    log.meal_category = body.get("category", log.meal_category)
-    log.calories = int(body.get("calories", log.calories))
-
-    log.protein = float(body.get("protein", log.protein))
-    log.carbs = float(body.get("carbs", log.carbs))
-    log.fat = float(body.get("fat", log.fat))
-
-    db.session.commit()
-
-    return jsonify({"msg": "Actualizado", "log": log.serialize()}), 200
-
-
-@api.route('/daily-log/<int:log_id>', methods=['DELETE'])
-@jwt_required()
-def delete_log(log_id):
-    user_id = int(get_jwt_identity())
-    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
-
-    if not log:
-        return jsonify({"msg": "Registro no encontrado"}), 404
-
-    db.session.delete(log)
-    db.session.commit()
-
-    return jsonify({"msg": "Eliminado correctamente"}), 200
 
 
 # --- 4. AYUNO ---
