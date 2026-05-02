@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 export const WaterPage = () => {
     const [totalWater, setTotalWater] = useState(0);
-    const [sessionWater, setSessionWater] = useState(0); 
+    const [sessionWater, setSessionWater] = useState(0);
     const [recommendedWater, setRecommendedWater] = useState(2520);
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const token = sessionStorage.getItem("token");
@@ -14,7 +14,7 @@ export const WaterPage = () => {
             const resSummary = await fetch(`${backendUrl}/api/daily-summary`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            
+
             if (resSummary.ok) {
                 const data = await resSummary.json();
                 // Sincronizamos con el valor real del backend
@@ -42,7 +42,7 @@ export const WaterPage = () => {
     // 2. Guardar y refrescar automáticamente
     const handleSaveWater = async () => {
         if (sessionWater <= 0) return;
-        
+
         try {
             const res = await fetch(`${backendUrl}/api/daily-log/water`, {
                 method: "POST",
@@ -56,7 +56,7 @@ export const WaterPage = () => {
 
             if (res.ok) {
                 // CLAVE: Recargamos los datos del servidor para que el número de arriba suba
-                await loadData(); 
+                await loadData();
                 setSessionWater(0); // Limpiamos el contador azul de abajo
                 alert("✅ ¡Consumo guardado y actualizado!");
             } else {
@@ -81,7 +81,7 @@ export const WaterPage = () => {
                             <h3 className="fw-bold mb-0">Seguimiento de Hidratación</h3>
                             <p className="small mb-0 opacity-75 fw-bold">ONU/OMS: 35ML POR KG DE PESO</p>
                         </div>
-                        
+
                         <div className="card-body p-4 p-md-5">
                             <div className="border rounded-4 p-4 bg-light mb-4 shadow-sm">
                                 <div className="row text-center mb-4">
@@ -106,8 +106,8 @@ export const WaterPage = () => {
                                         </span>
                                     </div>
                                     <div className="progress" style={{ height: "12px", borderRadius: "50px" }}>
-                                        <div 
-                                            className="progress-bar progress-bar-striped bg-success" 
+                                        <div
+                                            className="progress-bar progress-bar-striped bg-success"
                                             style={{ width: `${totalPercentage}%` }}
                                         ></div>
                                     </div>
@@ -119,8 +119,8 @@ export const WaterPage = () => {
                                         <span className="text-info">{Math.round(sessionPercentage)}%</span>
                                     </div>
                                     <div className="progress" style={{ height: "12px", borderRadius: "50px", backgroundColor: "#dee2e6" }}>
-                                        <div 
-                                            className="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                                        <div
+                                            className="progress-bar progress-bar-striped progress-bar-animated bg-info"
                                             style={{ width: `${sessionPercentage}%` }}
                                         ></div>
                                     </div>
@@ -135,9 +135,9 @@ export const WaterPage = () => {
                                     <button onClick={() => setSessionWater(0)} className="btn btn-sm text-danger text-decoration-none fw-bold ms-2">Reset</button>
                                 </div>
 
-                                <button 
+                                <button
                                     disabled={sessionWater <= 0}
-                                    onClick={handleSaveWater} 
+                                    onClick={handleSaveWater}
                                     className="btn btn-success btn-lg w-100 rounded-pill fw-bold shadow py-3"
                                 >
                                     <i className="fas fa-save me-2"></i>

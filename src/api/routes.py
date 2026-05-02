@@ -9,9 +9,8 @@ from datetime import datetime, date
 api = Blueprint('api', __name__)
 CORS(api)
 
+
 # --- 1. AUTENTICACIÓN ---
-
-
 @api.route('/signup', methods=['POST'])
 def handle_signup():
     body = request.get_json()
@@ -43,9 +42,8 @@ def handle_login():
 
     return jsonify({"msg": "Credenciales incorrectas"}), 401
 
+
 # --- 2. PERFIL DE USUARIO (LA RUTA QUE FALTABA) ---
-
-
 @api.route('/user-profile', methods=['GET', 'PUT'])
 @jwt_required()
 def handle_profile():
@@ -78,124 +76,7 @@ def handle_profile():
     return jsonify({"msg": "Perfil actualizado", "user": user.serialize()}), 200
 
 
-# ---------------- DAILY SUMMARY ----------------
-@api.route('/daily-summary', methods=['GET'])
-@jwt_required()
-def get_summary():
-    user_id = int(get_jwt_identity())
-    today = date.today()
-
-    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
-    user = db.session.get(User, user_id)
-
-    total_c = sum(l.calories or 0 for l in logs)
-    total_p = sum(l.protein or 0 for l in logs)
-    total_carbs = sum(l.carbs or 0 for l in logs)
-    total_f = sum(l.fat or 0 for l in logs)
-    total_w = sum(l.water_ml or 0 for l in logs)
-
-    return jsonify({
-        "total_calories": total_c,
-        "protein": total_p,
-        "carbs": total_carbs,
-        "fat": total_f,
-        "total_water": total_w,
-        "diet_type": user.diet_type if user else None
-    }), 200
-
-
-# ---------------- DAILY LOG ----------------
-@api.route('/daily-log', methods=['POST'])
-@jwt_required()
-def add_log():
-    user_id = int(get_jwt_identity())
-    body = request.get_json()
-
-    if not body:
-        return jsonify({"msg": "Body vacío"}), 400
-
-    food = (body.get("food") or "").strip()
-    category = (body.get("category") or "").strip()
-
-    if not food or not category:
-        return jsonify({"msg": "Faltan datos"}), 400
-
-    try:
-        new_log = DailyLog(
-            user_id=user_id,
-            meal_category=category,
-            food_name=food,
-            calories=int(body.get("calories", 0)),
-            protein=float(body.get("protein", 0)),
-            carbs=float(body.get("carbs", 0)),
-            fat=float(body.get("fat", 0)),
-            water_ml=int(body.get("water", 0)),
-            dates=date.today()
-        )
-
-        db.session.add(new_log)
-        db.session.commit()
-
-        return jsonify({"log": new_log.serialize()}), 201
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Error", "error": str(e)}), 500
-
-
-@api.route('/daily-log', methods=['GET'])
-@jwt_required()
-def get_daily_log():
-    user_id = int(get_jwt_identity())
-    today = date.today()
-
-    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
-
-    return jsonify([log.serialize() for log in logs]), 200
-
-
-@api.route('/daily-log/<int:log_id>', methods=['PUT'])
-@jwt_required()
-def update_log(log_id):
-    user_id = int(get_jwt_identity())
-    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
-
-    if not log:
-        return jsonify({"msg": "Registro no encontrado"}), 404
-
-    body = request.get_json()
-
-    log.food_name = body.get("food", log.food_name)
-    log.meal_category = body.get("category", log.meal_category)
-    log.calories = int(body.get("calories", log.calories))
-
-    log.protein = float(body.get("protein", log.protein))
-    log.carbs = float(body.get("carbs", log.carbs))
-    log.fat = float(body.get("fat", log.fat))
-
-    db.session.commit()
-
-    return jsonify({"msg": "Actualizado", "log": log.serialize()}), 200
-
-
-@api.route('/daily-log/<int:log_id>', methods=['DELETE'])
-@jwt_required()
-def delete_log(log_id):
-    user_id = int(get_jwt_identity())
-    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
-
-    if not log:
-        return jsonify({"msg": "Registro no encontrado"}), 404
-
-    db.session.delete(log)
-    db.session.commit()
-
-    return jsonify({"msg": "Eliminado correctamente"}), 200
-
-
-# --- 4. AYUNO ---
-
-
+# --- 3. AYUNO ---
 @api.route('/fasting/status', methods=['GET'])
 @jwt_required()
 def get_fasting_status():
@@ -270,9 +151,8 @@ def stop_fasting():
         db.session.rollback()
         return jsonify({"msg": "Error al guardar el fin del ayuno", "error": str(e)}), 500
 
-# --- 5. HIDRATACIÓN (SOLO AGUA) ---
 
-
+# --- 4. HIDRATACIÓN (SOLO AGUA) ---
 @api.route('/daily-log/water', methods=['POST'])
 @jwt_required()
 def add_water_log():
@@ -308,119 +188,7 @@ def add_water_log():
         return jsonify({"msg": "Error interno", "error": str(e)}), 500
 
 
-# PLAN NUTRICIONAL
-
-
-def generate_nutrition_plan(user):
-    if not all([user.weight, user.height, user.age]):
-        return None
-
-    tmb = (10 * user.weight) + (6.25 * user.height) - (5 * user.age) + 5
-
-    # Objetivo
-    if user.goal == "lose":
-        calories = tmb - 500
-    elif user.goal == "gain":
-        calories = tmb + 300
-    else:
-        calories = tmb
-
-    # Guardar en DB
-    user.daily_calories_limit = int(calories)
-
-    # Macros
-    protein = user.weight * 2
-    fat = user.weight * 0.8
-    carbs = (calories - (protein * 4 + fat * 9)) / 4
-
-    return {
-        "calories": int(calories),
-        "protein": int(protein),
-        "fat": int(fat),
-        "carbs": int(carbs)
-    }
-
-
-@api.route('/nutrition-plan', methods=['GET'])
-@jwt_required()
-def get_nutrition_plan():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    plan = generate_nutrition_plan(user)
-
-    if not plan:
-        return jsonify({"msg": "Faltan datos"}), 400
-
-    user.daily_calories_limit = plan["calories"]
-    db.session.commit()
-
-    return jsonify(plan), 200
-
-
-# RECOMENDACIONES
-
-def generate_ai_recommendations(user, total_calories, total_water):
-    recommendations = []
-
-    # Calorías
-    if user.daily_calories_limit:
-        if total_calories < user.daily_calories_limit * 0.7:
-            recommendations.append(
-                "Estás comiendo muy poco hoy, considera aumentar tu ingesta 🍽️")
-        elif total_calories > user.daily_calories_limit:
-            recommendations.append(
-                "Has superado tus calorías, intenta equilibrar tus próximas comidas ⚠️")
-        else:
-            recommendations.append("Vas muy bien con tus calorías 👌")
-
-    # Agua
-    if total_water < 1500:
-        recommendations.append("Te falta hidratación 💧 intenta beber más agua")
-    elif total_water >= 2000:
-        recommendations.append("Excelente hidratación hoy 💦")
-
-    # Objetivo
-    if user.goal == "lose":
-        recommendations.append(
-            "Prioriza proteína y reduce azúcares para perder grasa 🔥")
-    elif user.goal == "gain":
-        recommendations.append(
-            "Aumenta proteína y calorías para ganar músculo 💪")
-
-    # Tipo de dieta
-    if user.diet_type == "Keto":
-        recommendations.append(
-            "Evita carbohidratos y enfócate en grasas saludables 🥑")
-    elif user.diet_type == "Vegana":
-        recommendations.append(
-            "Asegura proteína con legumbres, tofu y quinoa 🌱")
-
-    return recommendations
-
-
-@api.route('/ai-recommendations', methods=['GET'])
-@jwt_required()
-def get_ai_recommendations():
-    user_id = get_jwt_identity()
-    today = datetime.utcnow().date()
-
-    user = User.query.get(user_id)
-    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
-
-    total_calories = sum(l.calories for l in logs)
-    total_water = sum(l.water_ml for l in logs)
-
-    recommendations = generate_ai_recommendations(
-        user, total_calories, total_water)
-
-    return jsonify({
-        "recommendations": recommendations
-    }), 200
-
-# hitorialpage
-
-
+# --- 5. HISTORIAL PAGE ---
 @api.route('/user-history', methods=['GET'])
 @jwt_required()
 def get_user_history():
@@ -465,3 +233,235 @@ def get_user_history():
 
     history.sort(key=lambda x: x['dates'], reverse=True)
     return jsonify(history), 200
+
+
+# --- 6. PLAN NUTRICIONAL ---
+# Función que sugiere al usuario la cantidad de calorías y macros debe consumir en base a su objet y caracts
+def generate_nutrition_plan(user):
+    if not all([user.weight, user.height, user.age]):
+        return None
+
+    tmb = (10 * user.weight) + (6.25 * user.height) - (5 * user.age) + 5
+
+    # Objetivo
+    if user.goal == "lose":
+        calories = tmb - 500
+    elif user.goal == "gain":
+        calories = tmb + 300
+    else:
+        calories = tmb
+
+    # Guardar en DB
+    user.daily_calories_limit = int(calories)
+
+    # Macros
+    protein = user.weight * 2
+    fat = user.weight * 0.8
+    carbs = (calories - (protein * 4 + fat * 9)) / 4
+
+    return {
+        "calories": int(calories),
+        "protein": int(protein),
+        "fat": int(fat),
+        "carbs": int(carbs)
+    }
+
+
+# GET - Obtener calorías que necesita consumir el usuario en base a sus objetivos y caract.
+@api.route('/nutrition-plan', methods=['GET'])
+@jwt_required()
+def get_nutrition_plan():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    plan = generate_nutrition_plan(user)
+
+    if not plan:
+        return jsonify({"msg": "Faltan datos"}), 400
+
+    user.daily_calories_limit = plan["calories"]
+    db.session.commit()
+
+    return jsonify(plan), 200
+
+
+# ---------------- 7. DAILY SUMMARY ----------------
+# GET - Obtener el total de calorias, marcos y agua consumidos en resumen
+@api.route('/daily-summary', methods=['GET'])
+@jwt_required()
+def get_summary():
+    user_id = int(get_jwt_identity())
+    today = date.today()
+
+    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
+    user = db.session.get(User, user_id)
+
+    total_c = sum(l.calories or 0 for l in logs)
+    total_p = sum(l.protein or 0 for l in logs)
+    total_carbs = sum(l.carbs or 0 for l in logs)
+    total_f = sum(l.fat or 0 for l in logs)
+    total_w = sum(l.water_ml or 0 for l in logs)
+
+    return jsonify({
+        "total_calories": total_c,
+        "protein": total_p,
+        "carbs": total_carbs,
+        "fat": total_f,
+        "total_water": total_w,
+        "diet_type": user.diet_type if user else None
+    }), 200
+
+
+# ---------------- 8. DAILY LOG ----------------
+# POST - Enviar los alimentos registrados de los usuarios al frontend
+@api.route('/daily-log', methods=['POST'])
+@jwt_required()
+def add_log():
+    user_id = int(get_jwt_identity())
+    body = request.get_json()
+
+    if not body:
+        return jsonify({"msg": "Body vacío"}), 400
+
+    food = (body.get("food") or "").strip()
+    category = (body.get("category") or "").strip()
+
+    if not food or not category:
+        return jsonify({"msg": "Faltan datos"}), 400
+
+    try:
+        new_log = DailyLog(
+            user_id=user_id,
+            meal_category=category,
+            food_name=food,
+            calories=int(body.get("calories", 0)),
+            protein=float(body.get("protein", 0)),
+            carbs=float(body.get("carbs", 0)),
+            fat=float(body.get("fat", 0)),
+            water_ml=int(body.get("water", 0)),
+            dates=date.today()
+        )
+
+        db.session.add(new_log)
+        db.session.commit()
+
+        return jsonify({"log": new_log.serialize()}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error", "error": str(e)}), 500
+
+
+# GET - Obtener los alimentos diarios
+@api.route('/daily-log', methods=['GET'])
+@jwt_required()
+def get_daily_log():
+    user_id = int(get_jwt_identity())
+    today = date.today()
+
+    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
+
+    return jsonify([log.serialize() for log in logs]), 200
+
+
+# PUT - Actualizar los alimentos que el usuario editó
+@api.route('/daily-log/<int:log_id>', methods=['PUT'])
+@jwt_required()
+def update_log(log_id):
+    user_id = int(get_jwt_identity())
+    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
+
+    if not log:
+        return jsonify({"msg": "Registro no encontrado"}), 404
+
+    body = request.get_json()
+
+    log.food_name = body.get("food", log.food_name)
+    log.meal_category = body.get("category", log.meal_category)
+    log.calories = int(body.get("calories", log.calories))
+
+    log.protein = float(body.get("protein", log.protein))
+    log.carbs = float(body.get("carbs", log.carbs))
+    log.fat = float(body.get("fat", log.fat))
+
+    db.session.commit()
+
+    return jsonify({"msg": "Actualizado", "log": log.serialize()}), 200
+
+
+# DELETE - Borrar los alimentos eliminados por el usuario
+@api.route('/daily-log/<int:log_id>', methods=['DELETE'])
+@jwt_required()
+def delete_log(log_id):
+    user_id = int(get_jwt_identity())
+    log = DailyLog.query.filter_by(id=log_id, user_id=user_id).first()
+
+    if not log:
+        return jsonify({"msg": "Registro no encontrado"}), 404
+
+    db.session.delete(log)
+    db.session.commit()
+
+    return jsonify({"msg": "Eliminado correctamente"}), 200
+
+
+# --- 9. RECOMENDACIONES ---
+# Función que envía recomendaciones, en base a su objetivo, tipo de dieta, cant de calorias y agua consumidos
+def generate_ai_recommendations(user, total_calories, total_water):
+    recommendations = []
+
+    # Calorías
+    if user.daily_calories_limit:
+        if total_calories < user.daily_calories_limit * 0.7:
+            recommendations.append(
+                "Estás comiendo muy poco hoy, considera aumentar tu ingesta 🍽️")
+        elif total_calories > user.daily_calories_limit:
+            recommendations.append(
+                "Has superado tus calorías, intenta equilibrar tus próximas comidas ⚠️")
+        else:
+            recommendations.append("Vas muy bien con tus calorías 👌")
+
+    # Agua
+    if total_water < 1500:
+        recommendations.append("Te falta hidratación 💧 intenta beber más agua")
+    elif total_water >= 2000:
+        recommendations.append("Excelente hidratación hoy 💦")
+
+    # Objetivo
+    if user.goal == "lose":
+        recommendations.append(
+            "Prioriza proteína y reduce azúcares para perder grasa 🔥")
+    elif user.goal == "gain":
+        recommendations.append(
+            "Aumenta proteína y calorías para ganar músculo 💪")
+
+    # Tipo de dieta
+    if user.diet_type == "Keto":
+        recommendations.append(
+            "Evita carbohidratos y enfócate en grasas saludables 🥑")
+    elif user.diet_type == "Vegana":
+        recommendations.append(
+            "Asegura proteína con legumbres, tofu y quinoa 🌱")
+
+    return recommendations
+
+
+# GET - Se obtienen y se guardan las recomendaciones en el backend
+@api.route('/ai-recommendations', methods=['GET'])
+@jwt_required()
+def get_ai_recommendations():
+    user_id = get_jwt_identity()
+    today = datetime.utcnow().date()
+
+    user = User.query.get(user_id)
+    logs = DailyLog.query.filter_by(user_id=user_id, dates=today).all()
+
+    total_calories = sum(l.calories for l in logs)
+    total_water = sum(l.water_ml for l in logs)
+
+    recommendations = generate_ai_recommendations(
+        user, total_calories, total_water)
+
+    return jsonify({
+        "recommendations": recommendations
+    }), 200

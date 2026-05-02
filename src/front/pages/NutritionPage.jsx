@@ -1,18 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export const NutritionPage = () => {
+    // Agregar las calorías
     const [calories, setCalories] = useState(0);
 
+    // Al editar un alimento lo lleva directamente al primer input del Form para que lo pueda editar
     const formRef = useRef(null);
     const inputRef = useRef(null);
 
-    // MACRONUTRIENTES
+    // Para agregar macronutrientes
     const [macros, setMacros] = useState({
         protein: 0,
         carbs: 0,
         fat: 0
     });
+
+    // Agregar tipo de dieta
     const [dietType, setDietType] = useState("Equilibrada");
+
+    // Se ingresa los datos en el formulario como: el alimento, calorias, macronutrientes y tiempo de comida
     const [foodEntry, setFoodEntry] = useState({
         food: "",
         calories: "",
@@ -21,16 +27,28 @@ export const NutritionPage = () => {
         fat: "",
         category: "Desayuno"
     });
+
+    // Se actualiza la lista de registro
     const [foodList, setFoodList] = useState([]);
+    // Plan personalizado
     const [plan, setPlan] = useState(null);
+    // Enviar recomendaciones
     const [recommendations, setRecommendations] = useState([]);
-    // RECOMENDACIONES SET INTERVAL
+    // Recomendaciones con set interval
     const [currentRecIndex, setCurrentRecIndex] = useState(0);
+    // Muestra modal
     const [showModal, setShowModal] = useState(false);
 
+    // Guarda el token temporalmente para evitar peligro de hackeo o robo información
     const token = sessionStorage.getItem("token");
+    // Se importa la api de .env para pasarlos a los fetch y que sea dinámico y no se rompa si cambia la api
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
+    // ========================
+    // CRUD
+    // ========================
+
+    // GET - para obtener la data de los alimentos actualizada
     const loadNutritionData = async () => {
         const res = await fetch(`${backendUrl}/api/daily-summary`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -39,7 +57,6 @@ export const NutritionPage = () => {
             const data = await res.json();
             setCalories(data.total_calories || 0);
             setDietType(data.diet_type || "Equilibrada");
-            // MACRONUTRIENTES
             setMacros({
                 protein: data.protein || 0,
                 carbs: data.carbs || 0,
@@ -48,6 +65,7 @@ export const NutritionPage = () => {
         }
     };
 
+    // GET - Para obtener el plan de alimentación personalizado basado en su objetivo y características
     const loadPlan = async () => {
         const res = await fetch(`${backendUrl}/api/nutrition-plan`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -56,6 +74,7 @@ export const NutritionPage = () => {
         if (res.ok) setPlan(data);
     };
 
+    // GET - Para obtener recomendaciones de la api backend
     const loadRecommendations = async () => {
         const res = await fetch(`${backendUrl}/api/ai-recommendations`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -64,6 +83,7 @@ export const NutritionPage = () => {
         if (res.ok) setRecommendations(data.recommendations);
     };
 
+    // GET - Obtener lista de alimentos actualizada
     const loadFoodList = async () => {
         const res = await fetch(`${backendUrl}/api/daily-log`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -75,6 +95,7 @@ export const NutritionPage = () => {
         }
     };
 
+    // Para renderizar una sola vez y no se haga un loop infinito
     useEffect(() => {
         if (!token) return;
 
@@ -85,7 +106,7 @@ export const NutritionPage = () => {
     }, [token]);
 
 
-    // RECOMENDATIONS SET INTERVAL
+    // Set interval de recomendaciones
     useEffect(() => {
         if (!recommendations.length) return;
 
@@ -96,11 +117,13 @@ export const NutritionPage = () => {
             setCurrentRecIndex(prev =>
                 (prev + 1) % recommendations.length
             );
-        }, 5000);
+        }, 5000); // Cada 5 segundos
 
         return () => clearInterval(interval);
     }, [recommendations]);
 
+
+    // POST - Enviar la data de los alimentos agregados con sus respectivas cal, macros y tiempo de comida
     const handleAddFood = async (e) => {
         e.preventDefault();
 
@@ -115,12 +138,9 @@ export const NutritionPage = () => {
                     category: foodEntry.category,
                     food: foodEntry.food,
                     calories: Number(foodEntry.calories || 0),
-
-                    // MACRONUTRIENTES
                     protein: Number(foodEntry.protein || 0),
                     carbs: Number(foodEntry.carbs || 0),
                     fat: Number(foodEntry.fat || 0),
-
                     water: 0
                 })
             });
@@ -139,7 +159,6 @@ export const NutritionPage = () => {
             setFoodEntry({
                 food: "",
                 calories: "",
-                // MACRONUTRIENTES
                 protein: "",
                 carbs: "",
                 fat: "",
@@ -156,6 +175,8 @@ export const NutritionPage = () => {
         }
     };
 
+
+    // Para editar los alimentos
     const [editingId, setEditingId] = useState(null);
 
     const handleEdit = (item) => {
@@ -170,8 +191,7 @@ export const NutritionPage = () => {
             category: item.category
         });
 
-        // 🚀 SCROLL AUTOMÁTICO AL FORM
-
+        // SCROLL AUTOMÁTICO AL FORM
         setTimeout(() => {
             formRef.current?.scrollIntoView({
                 behavior: "smooth",
@@ -181,6 +201,7 @@ export const NutritionPage = () => {
         }, 100);
     };
 
+    // PUT - Lleva al backend los alimentos actualizados o modificados
     const handleUpdateFood = async (e) => {
         e.preventDefault();
 
@@ -197,6 +218,7 @@ export const NutritionPage = () => {
                     protein: Number(foodEntry.protein),
                     carbs: Number(foodEntry.carbs),
                     fat: Number(foodEntry.fat),
+                    // Tiempo de comida (desay, comida, cena, colación)
                     category: foodEntry.category
                 })
             });
@@ -222,6 +244,7 @@ export const NutritionPage = () => {
         }
     };
 
+    // DELETE - Para eliminar algún alimento del backend
     const handleDeleteFood = async (id) => {
 
         const confirmDelete = window.confirm("¿Seguro que quieres eliminar este alimento?");
@@ -247,9 +270,16 @@ export const NutritionPage = () => {
         }
     };
 
+    // ========================
+    // PROGRESO
+    // ========================
+
+    // Muestra el progreso de las calorías consumidas
     const progress = plan?.calories ? (calories / plan?.calories) * 100 : 0;
+    // Muestra cuantas calorías faltan por consumir
     const remaining = plan?.calories ? plan?.calories - calories : 0;
 
+    // UI - Asociación porcentaje y diseño del progreso de los macros consumidos
     const CircularProgress = ({ value, max, label }) => {
         const radius = 45;
         const stroke = 8;
@@ -319,18 +349,19 @@ export const NutritionPage = () => {
         );
     };
 
-
-
+    // ========================
+    // UI
+    // ========================
     return (
         <div className="container py-4">
 
             {/* HEADER RESUMEN */}
-            <div className="card shadow border-0 p-4 mb-4 bg-success text-white text-center">
+            <div className="card shadow-lg rounded-4 overflow-hidden border-0 p-4 mb-4 bg-success text-white text-center">
                 <h4 className="fw-bold">TU DÍA NUTRICIONAL</h4>
                 <h1 className="display-4 fw-bold mb-0">{calories} kcal</h1>
                 <h5>Consumidas hoy</h5>
                 <div className="mt-2">
-                    <span className="badge bg-light text-success fs-5 px-4 py-1 rounded-pill">
+                    <span className="badge bg-light text-success fs-5 px-4 py-1 rounded-2">
                         {dietType}
                     </span>
                 </div>
@@ -338,7 +369,7 @@ export const NutritionPage = () => {
 
             {/* PLAN + PROGRESO */}
             {plan && (
-                <div className="card shadow border-0 p-4 mb-4">
+                <div className="card shadow rounded-4 border-0 p-4 mb-4">
 
                     <h5 className="fw-bold text-success mb-4 text-center">
                         PLAN PERSONALIZADO
@@ -369,9 +400,9 @@ export const NutritionPage = () => {
             {/* FORM + RESUMEN */}
             <div className="row g-4">
 
-                {/* FORM */}
+                {/* FORM - LATERAL IZQUIERDO */}
                 <div className="col-md-5" ref={formRef}>
-                    <div className="card shadow border-0 p-4 h-100">
+                    <div className="card rounded-4 overflow-hidden shadow border-0 p-4 h-100">
                         <h5 className="fw-bold text-success mb-3">
                             {editingId ? "Editar alimento" : "Registrar comida"}
                         </h5>
@@ -396,7 +427,6 @@ export const NutritionPage = () => {
                                 required
                             />
 
-                            {/* MACRONUTRIENTES */}
                             <input
                                 type="number"
                                 className="form-control mb-2"
@@ -433,19 +463,19 @@ export const NutritionPage = () => {
                             </select>
 
                             {/* EXTRA */}
-                            <button className="btn btn-success w-100 fw-bold">
+                            <button className="btn btn-success rounded-3 w-100 fw-bold">
                                 {editingId ? "Guardar cambios" : "+ Añadir"}
                             </button>
                         </form>
                     </div>
                 </div>
 
-                {/* RESUMEN LATERAL */}
+                {/* RESUMEN LATERAL DERECHO */}
                 {/* RESUMEN PRO CON PROGRESO INTEGRADO */}
                 <div className="col-md-7">
-                    <div className="card shadow border-0 p-4 h-100 d-flex justify-content-center">
+                    <div className="card shadow-lg rounded-4 overflow-hidden border-0 p-4 h-100 d-flex justify-content-center">
 
-                        {/* MENSAJE INTELIGENTE */}
+                        {/* MENSAJES INTELIGENTES */}
                         <div className="mt-2 mb-4 text-center small fw-bold">
 
                             {progress < 40 && (
@@ -475,12 +505,15 @@ export const NutritionPage = () => {
                         </div>
 
 
-                        {/* 🔥 BARRA DE CALORÍAS */}
+                        {/* BARRA DE CALORÍAS */}
                         <div className="mb-4">
 
                             <div className="d-flex justify-content-between small fw-bold mb-1">
                                 <span className="fw-bold text-muted">
                                     {calories} / {plan?.calories} kcal
+                                </span>
+                                <span className="fw-bold text-muted">
+                                    Faltan {remaining} kcal
                                 </span>
                             </div>
 
@@ -545,7 +578,7 @@ export const NutritionPage = () => {
                 </div>
 
                 {/* LISTA ALIMENTOS AGREGADOS POR CATEGORIA */}
-                <div className="card shadow border-0 p-4 mt-4">
+                <div className="card rounded-4 overflow-hidden shadow border-0 p-4 mt-4">
                     <h5 className="fw-bold text-success text-center mb-3">
                         REGISTRO DE ALIMENTOS
                     </h5>
@@ -617,7 +650,7 @@ export const NutritionPage = () => {
                             width: "300px"
                         }}
                     >
-                        <div className="card shadow-lg border-0">
+                        <div className="card shadow-lg rounded-4 overflow-hidden border-0">
                             <div className="card-body text-center">
 
                                 <h6 className="fw-bold text-success mb-2">
@@ -629,7 +662,7 @@ export const NutritionPage = () => {
                                 </p>
 
                                 <button
-                                    className="btn btn-sm btn-outline-danger w-100"
+                                    className="btn btn-sm rounded-2 btn-outline-danger w-100"
                                     onClick={() => setShowModal(false)}
                                 >
                                     Cerrar
