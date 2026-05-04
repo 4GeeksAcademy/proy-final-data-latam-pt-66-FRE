@@ -425,7 +425,7 @@ def generate_ai_recommendations(user, total_calories, total_water):
     if total_water < 1500:
         recommendations.append("Te falta hidratación 💧 intenta beber más agua")
     elif total_water >= 2000:
-        recommendations.append("Excelente hidratación hoy 💦")
+        recommendations.append("💧 Excelente hidratación hoy 💧")
 
     # Objetivo
     if user.goal == "lose":

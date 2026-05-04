@@ -1,290 +1,326 @@
-import { useState, useEffect, useRef } from "react";
+import { useReducer, useEffect, useRef } from "react";
 
 export const NutritionPage = () => {
-    // Agregar las calorías
-    const [calories, setCalories] = useState(0);
 
-    // Al editar un alimento lo lleva directamente al primer input del Form para que lo pueda editar
     const formRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Para agregar macronutrientes
-    const [macros, setMacros] = useState({
-        protein: 0,
-        carbs: 0,
-        fat: 0
-    });
-
-    // Agregar tipo de dieta
-    const [dietType, setDietType] = useState("Equilibrada");
-
-    // Se ingresa los datos en el formulario como: el alimento, calorias, macronutrientes y tiempo de comida
-    const [foodEntry, setFoodEntry] = useState({
-        food: "",
-        calories: "",
-        protein: "",
-        carbs: "",
-        fat: "",
-        category: "Desayuno"
-    });
-
-    // Se actualiza la lista de registro
-    const [foodList, setFoodList] = useState([]);
-    // Plan personalizado
-    const [plan, setPlan] = useState(null);
-    // Enviar recomendaciones
-    const [recommendations, setRecommendations] = useState([]);
-    // Recomendaciones con set interval
-    const [currentRecIndex, setCurrentRecIndex] = useState(0);
-    // Muestra modal
-    const [showModal, setShowModal] = useState(false);
-
-    // Guarda el token temporalmente para evitar peligro de hackeo o robo información
     const token = sessionStorage.getItem("token");
-    // Se importa la api de .env para pasarlos a los fetch y que sea dinámico y no se rompa si cambia la api
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+    const initialState = {
+        calories: 0,
+        macros: { protein: 0, carbs: 0, fat: 0 },
+        dietType: "",
+
+        user: {
+            weight: 0,
+            height: 0,
+            age: 0,
+            gender: "", // male | female
+            goal: "" // lose | maintain | gain
+        },
+
+        foodEntry: {
+            food: "",
+            calories: "",
+            protein: "",
+            carbs: "",
+            fat: "",
+            category: ""
+        },
+
+        foodList: [],
+        plan: null,
+        recommendations: [],
+        currentRecIndex: 0,
+        showModal: false,
+        editingId: null
+    };
+
+    const reducer = (state, action) => {
+        switch (action.type) {
+
+            case "SET_SUMMARY":
+                return {
+                    ...state,
+                    calories: action.payload.total_calories || 0,
+                    dietType: action.payload.diet_type || "Equilibrada",
+                    macros: {
+                        protein: action.payload.protein || 0,
+                        carbs: action.payload.carbs || 0,
+                        fat: action.payload.fat || 0
+                    }
+                };
+
+            case "SET_PLAN":
+                return { ...state, plan: action.payload };
+
+            case "SET_FOOD_LIST":
+                return {
+                    ...state,
+                    foodList: (action.payload || []).map(item => ({
+                        id: item.id,
+
+                        // FIX CLAVE AQUÍ
+                        food: item.food_name || item.food || "Sin nombre",
+
+                        category: item.meal_category || item.category || "Desayuno",
+
+                        calories: Number(item.calories || 0),
+                        protein: Number(item.protein || 0),
+                        carbs: Number(item.carbs || 0),
+                        fat: Number(item.fat || 0)
+                    }))
+                };
+
+            case "SET_RECOMMENDATIONS":
+                return {
+                    ...state,
+                    recommendations: action.payload || [],
+                    showModal: action.payload?.length > 0,
+                    currentRecIndex: 0
+                };
+
+            case "NEXT_RECOMMENDATION":
+                return {
+                    ...state,
+                    currentRecIndex:
+                        state.recommendations.length > 0
+                            ? (state.currentRecIndex + 1) % state.recommendations.length
+                            : 0
+                };
+
+            case "UPDATE_FOOD_ENTRY":
+                return {
+                    ...state,
+                    foodEntry: {
+                        ...state.foodEntry,
+                        [action.field]: action.value
+                    }
+                };
+
+            case "RESET_FORM":
+                return {
+                    ...state,
+                    foodEntry: initialState.foodEntry,
+                    editingId: null
+                };
+
+            case "SET_EDIT":
+                return {
+                    ...state,
+                    editingId: action.payload.id,
+                    foodEntry: {
+                        food: action.payload.food || "",
+                        calories: action.payload.calories || "",
+                        protein: action.payload.protein || "",
+                        carbs: action.payload.carbs || "",
+                        fat: action.payload.fat || "",
+                        category: action.payload.category || "Desayuno"
+                    }
+                };
+
+            case "CLOSE_MODAL":
+                return { ...state, showModal: false };
+
+            default:
+                return state;
+        }
+    };
+
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    // ========================
+    // API
+    // ========================
+    const apiFetch = async (endpoint, options = {}) => {
+        try {
+            const res = await fetch(`${backendUrl}${endpoint}`, {
+                ...options,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                    ...(options.headers || {})
+                }
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+
+            return await res.json();
+
+        } catch (err) {
+            console.error("API ERROR:", err.message);
+            return null;
+        }
+    };
+
+    // ========================
+    // LOADERS
+    // ========================
+    const loadAll = async () => {
+        const [summary, plan, foods, recs] = await Promise.all([
+            apiFetch("/api/daily-summary"),
+            apiFetch("/api/nutrition-plan"),
+            apiFetch("/api/daily-log"),
+            apiFetch("/api/ai-recommendations")
+        ]);
+
+        if (summary) dispatch({ type: "SET_SUMMARY", payload: summary });
+        if (plan) dispatch({ type: "SET_PLAN", payload: plan });
+        if (foods) dispatch({ type: "SET_FOOD_LIST", payload: foods });
+        if (recs) dispatch({ type: "SET_RECOMMENDATIONS", payload: recs?.recommendations });
+    };
+
+    useEffect(() => {
+        if (token) loadAll();
+    }, [token]);
+
+    // ========================
+    // INTERVALO RECOMMENDATIONS
+    // ========================
+    useEffect(() => {
+        if (!state.recommendations.length || !state.showModal) return;
+
+        const interval = setInterval(() => {
+            dispatch({ type: "NEXT_RECOMMENDATION" });
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [state.recommendations, state.showModal]);
+
 
     // ========================
     // CRUD
     // ========================
-
-    // GET - para obtener la data de los alimentos actualizada
-    const loadNutritionData = async () => {
-        const res = await fetch(`${backendUrl}/api/daily-summary`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            setCalories(data.total_calories || 0);
-            setDietType(data.diet_type || "Equilibrada");
-            setMacros({
-                protein: data.protein || 0,
-                carbs: data.carbs || 0,
-                fat: data.fat || 0
-            });
-        }
-    };
-
-    // GET - Para obtener el plan de alimentación personalizado basado en su objetivo y características
-    const loadPlan = async () => {
-        const res = await fetch(`${backendUrl}/api/nutrition-plan`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (res.ok) setPlan(data);
-    };
-
-    // GET - Para obtener recomendaciones de la api backend
-    const loadRecommendations = async () => {
-        const res = await fetch(`${backendUrl}/api/ai-recommendations`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (res.ok) setRecommendations(data.recommendations);
-    };
-
-    // GET - Obtener lista de alimentos actualizada
-    const loadFoodList = async () => {
-        const res = await fetch(`${backendUrl}/api/daily-log`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            setFoodList(data);
-        }
-    };
-
-    // Para renderizar una sola vez y no se haga un loop infinito
-    useEffect(() => {
-        if (!token) return;
-
-        loadNutritionData();
-        loadPlan();
-        loadRecommendations();
-        loadFoodList();
-    }, [token]);
-
-
-    // Set interval de recomendaciones
-    useEffect(() => {
-        if (!recommendations.length) return;
-
-        // Mostrar modal cuando llegan recomendaciones
-        setShowModal(true);
-
-        const interval = setInterval(() => {
-            setCurrentRecIndex(prev =>
-                (prev + 1) % recommendations.length
-            );
-        }, 5000); // Cada 5 segundos
-
-        return () => clearInterval(interval);
-    }, [recommendations]);
-
-
-    // POST - Enviar la data de los alimentos agregados con sus respectivas cal, macros y tiempo de comida
     const handleAddFood = async (e) => {
         e.preventDefault();
 
-        try {
-            const res = await fetch(`${backendUrl}/api/daily-log`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    category: foodEntry.category,
-                    food: foodEntry.food,
-                    calories: Number(foodEntry.calories || 0),
-                    protein: Number(foodEntry.protein || 0),
-                    carbs: Number(foodEntry.carbs || 0),
-                    fat: Number(foodEntry.fat || 0),
-                    water: 0
-                })
-            });
+        const payload = {
+            food: state.foodEntry.food,
+            category: state.foodEntry.category,
+            calories: Number(state.foodEntry.calories || 0),
+            protein: Number(state.foodEntry.protein || 0),
+            carbs: Number(state.foodEntry.carbs || 0),
+            fat: Number(state.foodEntry.fat || 0),
+            water: 0
+        };
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                console.error(data.msg || "Error");
-                return;
-            }
-
-            const newItem = data.log || data;
-
-            setFoodList(prev => [...prev, newItem]);
-
-            setFoodEntry({
-                food: "",
-                calories: "",
-                protein: "",
-                carbs: "",
-                fat: "",
-
-                category: "Desayuno"
-            });
-
-            await loadFoodList();
-            await loadNutritionData();
-            await loadRecommendations();
-
-        } catch (error) {
-            console.error("Error de conexión:", error);
-        }
-    };
-
-
-    // Para editar los alimentos
-    const [editingId, setEditingId] = useState(null);
-
-    const handleEdit = (item) => {
-        setEditingId(item.id);
-
-        setFoodEntry({
-            food: item.food,
-            calories: item.calories,
-            protein: item.protein,
-            carbs: item.carbs,
-            fat: item.fat,
-            category: item.category
+        const res = await apiFetch("/api/daily-log", {
+            method: "POST",
+            body: JSON.stringify(payload)
         });
 
-        // SCROLL AUTOMÁTICO AL FORM
-        setTimeout(() => {
-            formRef.current?.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-            inputRef.current?.focus(); // auto focus
-        }, 100);
+        if (!res) return;
+
+        dispatch({ type: "RESET_FORM" });
+        await loadAll();
     };
 
-    // PUT - Lleva al backend los alimentos actualizados o modificados
     const handleUpdateFood = async (e) => {
         e.preventDefault();
 
-        try {
-            const res = await fetch(`${backendUrl}/api/daily-log/${editingId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    food: foodEntry.food,
-                    calories: Number(foodEntry.calories),
-                    protein: Number(foodEntry.protein),
-                    carbs: Number(foodEntry.carbs),
-                    fat: Number(foodEntry.fat),
-                    // Tiempo de comida (desay, comida, cena, colación)
-                    category: foodEntry.category
-                })
-            });
+        const payload = {
+            food: state.foodEntry.food,
+            category: state.foodEntry.category,
+            calories: Number(state.foodEntry.calories || 0),
+            protein: Number(state.foodEntry.protein || 0),
+            carbs: Number(state.foodEntry.carbs || 0),
+            fat: Number(state.foodEntry.fat || 0)
+        };
 
-            if (!res.ok) return;
+        await apiFetch(`/api/daily-log/${state.editingId}`, {
+            method: "PUT",
+            body: JSON.stringify(payload)
+        });
 
-            setEditingId(null);
-
-            setFoodEntry({
-                food: "",
-                calories: "",
-                protein: "",
-                carbs: "",
-                fat: "",
-                category: "Desayuno"
-            });
-
-            await loadFoodList();
-            await loadNutritionData();
-
-        } catch (err) {
-            console.error(err);
-        }
+        dispatch({ type: "RESET_FORM" });
+        await loadAll();
     };
 
-    // DELETE - Para eliminar algún alimento del backend
+    const handleEdit = (item) => {
+        dispatch({ type: "SET_EDIT", payload: item });
+
+        setTimeout(() => {
+            formRef.current?.scrollIntoView({ behavior: "smooth" });
+            inputRef.current?.focus();
+        }, 100);
+    };
+
     const handleDeleteFood = async (id) => {
-
-        const confirmDelete = window.confirm("¿Seguro que quieres eliminar este alimento?");
-
+        const confirmDelete = window.confirm("¿Eliminar alimento?");
         if (!confirmDelete) return;
 
-        try {
-            const res = await fetch(`${backendUrl}/api/daily-log/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            });
+        const res = await apiFetch(`/api/daily-log/${id}`, {
+            method: "DELETE"
+        });
 
-            if (!res.ok) return;
-
-            setFoodList(prev => prev.filter(f => f.id !== id));
-
-            await loadNutritionData();
-
-        } catch (err) {
-            console.error(err);
+        if (!res) {
+            alert("❌ Error al eliminar");
+            return;
         }
+
+        // ACTUALIZACIÓN LOCAL (sin reload)
+        dispatch({
+            type: "SET_FOOD_LIST",
+            payload: state.foodList.filter(item => item.id !== id)
+        });
+
+        // OPCIONAL: actualizar resumen sin recargar todo
+        await loadAll(); // puedes quitar esto si luego haces cálculo local
     };
 
-    // ========================
-    // PROGRESO
-    // ========================
+    // PLAN ADAPTADO
+    const calculatePlan = (user) => {
+        const { weight, height, age, gender, goal } = user;
 
-    // Muestra el progreso de las calorías consumidas
-    const progress = plan?.calories ? (calories / plan?.calories) * 100 : 0;
-    // Muestra cuantas calorías faltan por consumir
-    const remaining = plan?.calories ? plan?.calories - calories : 0;
+        // TMB
+        const bmr =
+            gender === "male"
+                ? 10 * weight + 6.25 * height - 5 * age + 5
+                : 10 * weight + 6.25 * height - 5 * age - 161;
 
-    // UI - Asociación porcentaje y diseño del progreso de los macros consumidos
-    const CircularProgress = ({ value, max, label }) => {
-        const radius = 45;
-        const stroke = 8;
-        const normalizedRadius = radius - stroke * 0.5;
-        const circumference = normalizedRadius * 2 * Math.PI;
+        // Actividad (puedes hacerlo dinámico luego)
+        const activityFactor = 1.55;
+
+        let calories = bmr * activityFactor;
+
+        // Ajuste por objetivo
+        if (goal === "lose") calories -= 400;
+        if (goal === "gain") calories += 400;
+
+        // Macros estándar fitness
+        const protein = weight * 2; // 2g/kg
+        const fat = weight * 0.8;   // 0.8g/kg
+        const carbs = (calories - (protein * 4 + fat * 9)) / 4;
+
+        return {
+            calories: Math.round(calories),
+            protein: Math.round(protein),
+            carbs: Math.round(carbs),
+            fat: Math.round(fat)
+        };
+    };
+
+    useEffect(() => {
+        if (!state.plan) {
+            const calculatedPlan = calculatePlan(state.user);
+
+            dispatch({
+                type: "SET_PLAN",
+                payload: calculatedPlan
+            });
+        }
+    }, [state.user]);
+
+    // ========================
+    // DERIVED
+    // ========================
+    const MacroRing = ({ value, max, label, color, unit = "g" }) => {
+        const radius = 50;
+        const stroke = 10;
+        const normalizedRadius = radius - stroke / 2;
+        const circumference = 2 * Math.PI * normalizedRadius;
 
         const percentage = max ? (value / max) * 100 : 0;
         const strokeDashoffset =
@@ -292,61 +328,67 @@ export const NutritionPage = () => {
 
         return (
             <div className="text-center">
-                <svg height={radius * 2} width={radius * 2}>
-                    {/* Fondo */}
+                <svg width="120" height="120">
+
                     <circle
+                        cx="60"
+                        cy="60"
+                        r={normalizedRadius}
                         stroke="#e9ecef"
-                        fill="transparent"
                         strokeWidth={stroke}
-                        r={normalizedRadius}
-                        cx={radius}
-                        cy={radius}
+                        fill="transparent"
                     />
 
-                    {/* Progreso */}
                     <circle
-                        stroke={
-                            percentage < 70
-                                ? "#ffc107"
-                                : percentage <= 100
-                                    ? "#28a745"
-                                    : "#dc3545"
-                        }
-                        fill="transparent"
-                        strokeWidth={stroke}
-                        strokeDasharray={circumference + " " + circumference}
-                        style={{
-                            strokeDashoffset,
-                            transition: "stroke-dashoffset 0.6s ease"
-                        }}
-                        strokeLinecap="round"
+                        cx="60"
+                        cy="60"
                         r={normalizedRadius}
-                        cx={radius}
-                        cy={radius}
+                        stroke={color}
+                        strokeWidth={stroke}
+                        fill="transparent"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
                     />
 
-                    {/* TEXTO CENTRAL */}
                     <text
                         x="50%"
                         y="50%"
                         dy="0.3em"
                         textAnchor="middle"
-                        fontSize="12"
+                        fontSize="14"
                         fontWeight="bold"
                     >
                         {Math.round(percentage)}%
                     </text>
                 </svg>
 
-                <div className="small mt-2 fw-bold">
-                    {label}
-                </div>
+                <div className="fw-bold mt-2">{label}</div>
 
-                <div className="small text-muted">
-                    {value}g / {max}g
-                </div>
+                <small className="text-muted">
+                    {value} / {max || 0} {unit}
+                </small>
             </div>
         );
+    };
+
+    const remaining = state.plan?.calories
+        ? state.plan.calories - state.calories
+        : 0;
+
+
+    const calculateMacrosFromCalories = (calories, plan) => {
+        if (!plan || !calories) return { protein: "", carbs: "", fat: "" };
+
+        const proteinRatio = (plan.protein * 4) / plan.calories;
+        const carbsRatio = (plan.carbs * 4) / plan.calories;
+        const fatRatio = (plan.fat * 9) / plan.calories;
+
+        return {
+            protein: Math.round((calories * proteinRatio) / 4),
+            carbs: Math.round((calories * carbsRatio) / 4),
+            fat: Math.round((calories * fatRatio) / 9)
+        };
     };
 
     // ========================
@@ -355,325 +397,465 @@ export const NutritionPage = () => {
     return (
         <div className="container py-4">
 
-            {/* HEADER RESUMEN */}
-            <div className="card shadow-lg rounded-4 overflow-hidden border-0 p-4 mb-4 bg-success text-white text-center">
-                <h4 className="fw-bold">TU DÍA NUTRICIONAL</h4>
-                <h1 className="display-4 fw-bold mb-0">{calories} kcal</h1>
-                <h5>Consumidas hoy</h5>
-                <div className="mt-2">
-                    <span className="badge bg-light text-success fs-5 px-4 py-1 rounded-2">
-                        {dietType}
-                    </span>
+            {/* PLAN */}
+            <div className="card shadow border-0 rounded-4 p-3 mb-4">
+
+                {/* TIPO DE DIETA */}
+                <span className="badge bg-success m-3 align-self-center">
+                    {state.dietType}
+                </span>
+
+                {/* HEADER */}
+                <div className="text-center mb-3">
+                    <h6 className="text-muted mb-1">Objetivo diario</h6>
+                    <h3 className="fw-bold mb-0 text-success">
+                        {state.plan?.calories} kcal
+                    </h3>
                 </div>
-            </div>
 
-            {/* PLAN + PROGRESO */}
-            {plan && (
-                <div className="card shadow rounded-4 border-0 p-4 mb-4">
+                {/* MACROS */}
+                <div className="row text-center">
 
-                    <h5 className="fw-bold text-success mb-4 text-center">
-                        PLAN PERSONALIZADO
-                    </h5>
+                    <div className="col">
+                        <div className="p-2 rounded-3 bg-light">
+                            <div className="fw-bold text-primary">
+                                {state.plan?.protein}g
+                            </div>
+                            <small className="text-muted">Proteína</small>
+                        </div>
+                    </div>
 
-                    <div className="row text-center mb-4">
-                        <div className="col">
-                            <h4>{plan?.calories}</h4>
-                            <small>Kcal</small>
+                    <div className="col">
+                        <div className="p-2 rounded-3 bg-light">
+                            <div className="fw-bold text-warning">
+                                {state.plan?.carbs}g
+                            </div>
+                            <small className="text-muted">Carbs</small>
                         </div>
-                        <div className="col">
-                            <h4>{plan?.protein}g</h4>
-                            <small>Proteína</small>
-                        </div>
-                        <div className="col">
-                            <h4>{plan?.carbs}g</h4>
-                            <small>Carbs</small>
-                        </div>
-                        <div className="col">
-                            <h4>{plan?.fat}g</h4>
-                            <small>Grasas</small>
+                    </div>
+
+                    <div className="col">
+                        <div className="p-2 rounded-3 bg-light">
+                            <div className="fw-bold text-danger">
+                                {state.plan?.fat}g
+                            </div>
+                            <small className="text-muted">Grasas</small>
                         </div>
                     </div>
 
                 </div>
-            )}
 
-            {/* FORM + RESUMEN */}
+            </div>
+
             <div className="row g-4">
 
-                {/* FORM - LATERAL IZQUIERDO */}
-                <div className="col-md-5" ref={formRef}>
-                    <div className="card rounded-4 overflow-hidden shadow border-0 p-4 h-100">
-                        <h5 className="fw-bold text-success mb-3">
-                            {editingId ? "Editar alimento" : "Registrar comida"}
-                        </h5>
+                {/* FORM */}
+                <div className="col-md-6" ref={formRef}>
+                    <div className="card rounded-4 shadow border-0 p-4 h-100">
 
-                        <form onSubmit={editingId ? handleUpdateFood : handleAddFood}>
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                className="form-control mb-3"
-                                placeholder="¿Qué comiste?"
-                                value={foodEntry.food}
-                                onChange={e => setFoodEntry({ ...foodEntry, food: e.target.value })}
-                                required
-                            />
+                        {/* HEADER */}
+                        <div className="mb-3 text-center">
+                            <h5 className="fw-bold text-success mb-1">
+                                {state.editingId ? "Editar alimento" : "Agregar comida"}
+                            </h5>
+                            <small className="text-muted">
+                            </small>
+                        </div>
 
-                            <input
-                                type="number"
-                                className="form-control mb-3"
-                                placeholder="Calorías"
-                                value={foodEntry.calories}
-                                onChange={e => setFoodEntry({ ...foodEntry, calories: e.target.value })}
-                                required
-                            />
+                        <form onSubmit={state.editingId ? handleUpdateFood : handleAddFood}>
 
-                            <input
-                                type="number"
-                                className="form-control mb-2"
-                                placeholder="Proteína (g)"
-                                value={foodEntry.protein}
-                                onChange={e => setFoodEntry({ ...foodEntry, protein: e.target.value })}
-                            />
+                            {/* 🍽 FOOD */}
+                            <div className="mb-3">
+                                <label className="form-label fw-semibold">Alimento</label>
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Ej: Pechuga de pollo"
+                                    value={state.foodEntry.food}
+                                    onChange={e =>
+                                        dispatch({
+                                            type: "UPDATE_FOOD_ENTRY",
+                                            field: "food",
+                                            value: e.target.value
+                                        })
+                                    }
+                                    required
+                                />
+                            </div>
 
-                            <input
-                                type="number"
-                                className="form-control mb-2"
-                                placeholder="Carbohidratos (g)"
-                                value={foodEntry.carbs}
-                                onChange={e => setFoodEntry({ ...foodEntry, carbs: e.target.value })}
-                            />
+                            {/* 🔥 CALORÍAS */}
+                            <div className="mb-3">
+                                <label className="form-label fw-semibold">Calorías</label>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    placeholder="Ej: 250 kcal"
+                                    value={state.foodEntry.calories}
+                                    onChange={e => {
+                                        const value = e.target.value;
 
-                            <input
-                                type="number"
-                                className="form-control mb-3"
-                                placeholder="Grasas (g)"
-                                value={foodEntry.fat}
-                                onChange={e => setFoodEntry({ ...foodEntry, fat: e.target.value })}
-                            />
+                                        dispatch({
+                                            type: "UPDATE_FOOD_ENTRY",
+                                            field: "calories",
+                                            value
+                                        });
 
-                            <select
-                                className="form-control mb-3"
-                                value={foodEntry.category}
-                                onChange={e => setFoodEntry({ ...foodEntry, category: e.target.value })}
-                            >
-                                <option value="Desayuno">Desayuno</option>
-                                <option value="Comida">Comida</option>
-                                <option value="Cena">Cena</option>
-                                <option value="Colación">Colación</option>
-                            </select>
+                                        // AUTO-CÁLCULO
+                                        if (value) {
+                                            const macros = calculateMacrosFromCalories(Number(value), state.plan);
 
-                            {/* EXTRA */}
-                            <button className="btn btn-success rounded-3 w-100 fw-bold">
-                                {editingId ? "Guardar cambios" : "+ Añadir"}
+                                            dispatch({ type: "UPDATE_FOOD_ENTRY", field: "protein", value: macros.protein });
+                                            dispatch({ type: "UPDATE_FOOD_ENTRY", field: "carbs", value: macros.carbs });
+                                            dispatch({ type: "UPDATE_FOOD_ENTRY", field: "fat", value: macros.fat });
+                                        }
+                                    }}
+                                    required
+                                />
+                            </div>
+
+                            {/* 🧬 MACROS EN GRID */}
+                            <div className="row g-2 mb-3">
+
+                                <div className="col">
+                                    <label className="form-label small">Proteína</label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="g"
+                                        value={state.foodEntry.protein}
+                                        onChange={e =>
+                                            dispatch({
+                                                type: "UPDATE_FOOD_ENTRY",
+                                                field: "protein",
+                                                value: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+
+                                <div className="col">
+                                    <label className="form-label small">Carbs</label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="g"
+                                        value={state.foodEntry.carbs}
+                                        onChange={e =>
+                                            dispatch({
+                                                type: "UPDATE_FOOD_ENTRY",
+                                                field: "carbs",
+                                                value: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+
+                                <div className="col">
+                                    <label className="form-label small">Grasas</label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="g"
+                                        value={state.foodEntry.fat}
+                                        onChange={e =>
+                                            dispatch({
+                                                type: "UPDATE_FOOD_ENTRY",
+                                                field: "fat",
+                                                value: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+
+                            </div>
+
+                            {/* 🍽 CATEGORY */}
+                            <div className="mb-4">
+                                <label className="form-label fw-semibold">Tipo de comida</label>
+                                <select
+                                    className="form-select"
+                                    value={state.foodEntry.category}
+                                    onChange={e =>
+                                        dispatch({
+                                            type: "UPDATE_FOOD_ENTRY",
+                                            field: "category",
+                                            value: e.target.value
+                                        })
+                                    }
+                                >
+                                    <option value="">Selecciona</option>
+                                    <option>Desayuno</option>
+                                    <option>Comida</option>
+                                    <option>Cena</option>
+                                    <option>Colación</option>
+                                </select>
+                            </div>
+
+                            {/* BOTÓN */}
+                            <button className="btn btn-success w-100 py-2 fw-semibold">
+                                {state.editingId ? "Actualizar alimento" : "Agregar alimento"}
                             </button>
+
                         </form>
                     </div>
                 </div>
 
-                {/* RESUMEN LATERAL DERECHO */}
-                {/* RESUMEN PRO CON PROGRESO INTEGRADO */}
-                <div className="col-md-7">
-                    <div className="card shadow-lg rounded-4 overflow-hidden border-0 p-4 h-100 d-flex justify-content-center">
 
-                        {/* MENSAJES INTELIGENTES */}
-                        <div className="mt-2 mb-4 text-center small fw-bold">
+                {/* PROGRESOS */}
+                <div className="col-md-6">
+                    <div className="card shadow-lg rounded-4 border-0 p-4 h-100 d-flex justify-content-center">
 
-                            {progress < 40 && (
-                                <h5 className="text-warning">
-                                    ⚠️ Aún puedes comer más
-                                </h5>
-                            )}
+                        {/* 🔥 CALORÍAS (TOP) */}
+                        <div className="w-100 mb-4">
 
-                            {progress >= 40 && progress < 80 && (
-                                <h5 className="text-success">
-                                    ⚠️ Vas equilibrado
-                                </h5>
-                            )}
-
-                            {progress >= 80 && progress <= 100 && (
-                                <h5 className="text-primary">
-                                    ⚠️ Estás muy cerca de tu meta
-                                </h5>
-                            )}
-
-                            {progress > 100 && (
-                                <h5 className="text-danger">
-                                    ⚠️ Excediste tu objetivo
-                                </h5>
-                            )}
-
-                        </div>
-
-
-                        {/* BARRA DE CALORÍAS */}
-                        <div className="mb-4">
-
-                            <div className="d-flex justify-content-between small fw-bold mb-1">
-                                <span className="fw-bold text-muted">
-                                    {calories} / {plan?.calories} kcal
-                                </span>
-                                <span className="fw-bold text-muted">
-                                    Faltan {remaining} kcal
-                                </span>
+                            {/* HEADER */}
+                            <div className="text-center mb-2">
+                                <h6 className="text-muted mb-1">Calorías consumidas</h6>
+                                <h4 className="fw-bold text-success mb-0">
+                                    {state.calories} / {state.plan?.calories || 0} kcal
+                                </h4>
                             </div>
 
+                            {/* MAIN CALORIAS */}
                             <div
                                 className="progress"
-                                style={{
-                                    height: "12px",
-                                    borderRadius: "10px",
-                                    background: "#e9ecef"
-                                }}
+                                style={{ height: "14px", borderRadius: "12px" }}
                             >
                                 <div
-                                    className="progress-bar"
+                                    className={`progress-bar ${state.calories > state.plan?.calories
+                                        ? "bg-danger"
+                                        : "bg-success"
+                                        }`}
+                                    role="progressbar"
                                     style={{
-                                        width: `${Math.min(progress, 100)}%`,
-                                        transition: "width 0.6s ease",
-                                        borderRadius: "10px",
-                                        background:
-                                            progress < 50
-                                                ? "linear-gradient(90deg, #ffc107, #ff9800)"
-                                                : progress < 80
-                                                    ? "linear-gradient(90deg, #28a745, #20c997)"
-                                                    : progress <= 100
-                                                        ? "linear-gradient(90deg, #007bff, #6610f2)"
-                                                        : "linear-gradient(90deg, #dc3545, #ff6b6b)"
+                                        width: `${state.plan?.calories
+                                            ? Math.min(
+                                                (state.calories / state.plan.calories) * 100,
+                                                100
+                                            )
+                                            : 0
+                                            }%`,
+                                        transition: "width 0.5s ease"
                                     }}
                                 />
                             </div>
 
+                            {/* FOOTER */}
+                            <div className="d-flex justify-content-between mt-1">
+
+                                <div className="text-center mt-2">
+                                    <span
+                                        className={`badge ${state.calories > state.plan?.calories
+                                            ? "bg-danger"
+                                            : "bg-success"
+                                            }`}
+                                    >
+                                        {state.plan?.calories
+                                            ? Math.round(
+                                                (state.calories / state.plan.calories) * 100
+                                            )
+                                            : 0}
+                                        %
+                                    </span>
+                                </div>
+
+
+                                <small
+                                    className={`fw-semibold ${remaining < 0 ? "text-danger" : "text-success"
+                                        }`}
+                                >
+                                    {remaining >= 0
+                                        ? `Te quedan ${remaining} kcal`
+                                        : `Excediste ${Math.abs(remaining)} kcal`}
+                                </small>
+
+
+                            </div>
+
                         </div>
 
-                        {/* MACROS INLINE (COMPACTOS) */}
+                        {/* DIVIDER */}
+                        <hr className="my-3" />
+
+                        {/* 🧬 MACROS (BOTTOM ROW) */}
                         <div className="row text-center">
 
                             <div className="col">
-                                <CircularProgress
-                                    value={macros.protein}
-                                    max={plan?.protein}
+                                <MacroRing
+                                    value={state.macros.protein}
+                                    max={state.plan?.protein}
                                     label="Proteína"
+                                    color="#007bff"
                                 />
                             </div>
 
                             <div className="col">
-                                <CircularProgress
-                                    value={macros.carbs}
-                                    max={plan?.carbs}
+                                <MacroRing
+                                    value={state.macros.carbs}
+                                    max={state.plan?.carbs}
                                     label="Carbs"
+                                    color="#ffc107"
                                 />
                             </div>
 
                             <div className="col">
-                                <CircularProgress
-                                    value={macros.fat}
-                                    max={plan?.fat}
+                                <MacroRing
+                                    value={state.macros.fat}
+                                    max={state.plan?.fat}
                                     label="Grasas"
+                                    color="#dc3545"
                                 />
                             </div>
 
                         </div>
-
                     </div>
                 </div>
 
-                {/* LISTA ALIMENTOS AGREGADOS POR CATEGORIA */}
-                <div className="card rounded-4 overflow-hidden shadow border-0 p-4 mt-4">
-                    <h5 className="fw-bold text-success text-center mb-3">
-                        REGISTRO DE ALIMENTOS
-                    </h5>
-
-                    {["Desayuno", "Comida", "Cena", "Colación"].map(category => {
-                        const items = (foodList || []).filter(
-                            f => (f.category || "").trim().toLowerCase() === category.toLowerCase()
-                        ); const total = items.reduce((sum, i) => sum + Number(i.calories || 0), 0);
-
-                        return (
-                            <div key={category} className="mb-4">
-                                <div className="d-flex justify-content-between">
-                                    <h6 className="fw-bold text-success">{category}</h6>
-                                    <span className="small fw-bold">{total} kcal</span>
-                                </div>
-
-                                {items.length === 0 ? (
-                                    <p className="text-muted small">Sin registros</p>
-                                ) : (
-                                    items.map((item, i) => (
-                                        <div key={item.id || i} className="border-bottom py-2 small">
-
-                                            <div className="d-flex justify-content-between align-items-center">
-
-                                                {/* INFO DEL ALIMENTO */}
-                                                <div>
-                                                    <span>{item.food} - {item.calories} kcal</span>
-
-                                                    <div className="text-muted small">
-                                                        P: {item.protein}g | C: {item.carbs}g | G: {item.fat}g
-                                                    </div>
-                                                </div>
-
-                                                {/* BOTONES */}
-                                                <div>
-                                                    <button
-                                                        className="btn btn-sm btn-outline-success me-2"
-                                                        onClick={() => handleEdit(item)}
-                                                    >
-                                                        Editar
-                                                    </button>
-
-                                                    <button
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        onClick={() => handleDeleteFood(item.id)}
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* RECOMENDACIONES SET INTERVAL */}
-                {showModal && recommendations.length > 0 && (
-                    <div
-                        style={{
-                            position: "fixed",
-                            bottom: "20px",
-                            right: "20px",
-                            zIndex: 9999,
-                            width: "300px"
-                        }}
-                    >
-                        <div className="card shadow-lg rounded-4 overflow-hidden border-0">
-                            <div className="card-body text-center">
-
-                                <h6 className="fw-bold text-success mb-2">
-                                    Recomendación
-                                </h6>
-
-                                <p className="small mb-3">
-                                    {recommendations[currentRecIndex]}
-                                </p>
-
-                                <button
-                                    className="btn btn-sm rounded-2 btn-outline-danger w-100"
-                                    onClick={() => setShowModal(false)}
-                                >
-                                    Cerrar
-                                </button>
-
-                            </div>
-                        </div>
-                    </div>
-                )}
 
             </div>
+
+
+            {/* LISTA */}
+            <div className="card rounded-4 overflow-hidden shadow border-0 p-4 mt-4">
+
+                <h5 className="text-center text-success fw-bold mb-3">Registro diario</h5>
+
+                {["Desayuno", "Comida", "Cena", "Colación"].map(category => {
+
+                    const items = state.foodList.filter(
+                        f => (f.category || "").toLowerCase() === category.toLowerCase()
+                    );
+
+                    const total = items.reduce(
+                        (sum, i) => sum + Number(i.calories || 0),
+                        0
+                    );
+
+                    return (
+                        <div key={category} className="mb-4">
+
+                            <div className="d-flex justify-content-between">
+                                <strong>{category}</strong>
+                                <span>{total} kcal</span>
+                            </div>
+
+                            {items.length === 0 ? (
+                                <small className="text-muted">Sin registros</small>
+                            ) : (
+                                items.map(item => (
+                                    <div
+                                        key={item.id}
+                                        className="d-flex justify-content-between border-bottom py-2"
+                                    >
+
+
+                                        <div>
+                                            <div className="fw-semibold" style={{ fontSize: "0.95rem" }}>
+                                                {item.food}
+                                            </div>
+
+                                            <small className="text-success">
+                                                {item.calories} kcal •
+                                                <span className="text-primary"> P:{item.protein}</span> •
+                                                <span className="text-warning"> C:{item.carbs}</span> •
+                                                <span className="text-danger"> G:{item.fat}</span>
+                                            </small>
+                                        </div>
+
+                                        <div>
+                                            <button
+                                                className="btn btn-sm btn-outline-success me-2"
+                                                onClick={() => handleEdit(item)}
+                                            >
+                                                Editar
+                                            </button>
+
+                                            <button
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={() => handleDeleteFood(item.id)}
+                                            >
+                                                X
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    );
+                })}
+
+            </div>
+
+            {/* RECOMENDACIONES */}
+            {state.showModal && state.recommendations.length > 0 && (
+                <div
+                    className="position-fixed"
+                    style={{
+                        bottom: "20px",
+                        right: "20px",
+                        zIndex: 9999,
+                        width: "300px",
+                        animation: "fadeInUp 0.4s ease"
+                    }}
+                >
+                    <div className="rounded-4 shadow-lg border-0 bg-white overflow-hidden">
+
+                        {/* HEADER */}
+                        <div className="d-flex justify-content-end align-items-center px-3 pt-3 pb-2">
+
+                            <button
+                                className="btn-close"
+                                style={{ fontSize: "0.7rem" }}
+                                onClick={() => dispatch({ type: "CLOSE_MODAL" })}
+                            />
+                        </div>
+
+                        {/* BODY */}
+                        <div className="px-3 pb-3 text-center">
+
+                            <div
+                                key={state.currentRecIndex}
+                                style={{
+                                    fontSize: "0.95rem",
+                                    fontWeight: "500"
+                                }}
+                            >
+                                {state.recommendations[state.currentRecIndex]}
+                            </div>
+
+                            {/* PROGRESO */}
+                            <div className="mt-3">
+                                <div className="progress" style={{ height: "5px" }}>
+                                    <div
+                                        className="progress-bar bg-success"
+                                        style={{
+                                            width: `${((state.currentRecIndex + 1) / state.recommendations.length) * 100}%`
+                                        }}
+                                    />
+                                </div>
+
+                                <small className="text-muted">
+                                    {state.currentRecIndex + 1} / {state.recommendations.length}
+                                </small>
+                            </div>
+
+                            {/* BOTÓN */}
+                            <div className="d-flex justify-content-end mt-3">
+                                <button
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() => dispatch({ type: "NEXT_RECOMMENDATION" })}
+                                >
+                                    Siguiente →
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
         </div>
     );
 };
