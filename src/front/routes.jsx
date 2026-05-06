@@ -8,13 +8,14 @@ import { Demo } from "./pages/Demo";
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
-import { NutritionPage } from "./pages/NutritionPage"; // Página de Alimentación
-import { WaterPage } from "./pages/WaterPage";       // Página de Hidratación
-import { FastingPage } from "./pages/FastingPage";   // Página de Ayuno
-import { HistoryPage } from "./pages/HistoryPage";   // Página de Historial
-
-// NUEVA IMPORTACIÓN: Asegúrate de que el archivo RecipesPage.jsx exista en tu carpeta pages
+import { NutritionPage } from "./pages/NutritionPage";
+import { WaterPage } from "./pages/WaterPage";
+import { FastingPage } from "./pages/FastingPage";
+import { HistoryPage } from "./pages/HistoryPage";
 import { RecipesPage } from "./pages/RecipesPage";
+
+// IMPORTACIÓN DEL COMPONENTE DE PROTECCIÓN
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -26,16 +27,34 @@ export const router = createBrowserRouter(
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* Rutas de la Aplicación */}
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/nutricion" element={<NutritionPage />} />
-
-      {/* NUEVA RUTA DE RECETAS: Ahora el clic en la Navbar encontrará este camino */}
-      <Route path="/recetas" element={<RecipesPage />} />
-
-      <Route path="/hidratacion" element={<WaterPage />} />
-      <Route path="/ayuno" element={<FastingPage />} />
-      <Route path="/historial" element={<HistoryPage />} />
+      {/* 
+          RUTAS PROTEGIDAS 
+          Envolvemos cada una con <ProtectedRoute> para validar el token
+      */}
+      <Route 
+        path="/dashboard" 
+        element={<ProtectedRoute><Dashboard /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/nutricion" 
+        element={<ProtectedRoute><NutritionPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/recetas" 
+        element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/hidratacion" 
+        element={<ProtectedRoute><WaterPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/ayuno" 
+        element={<ProtectedRoute><FastingPage /></ProtectedRoute>} 
+      />
+      <Route 
+        path="/historial" 
+        element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} 
+      />
 
       {/* Rutas de ejemplo/demo */}
       <Route path="/demo" element={<Demo />} />

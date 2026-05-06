@@ -46,10 +46,12 @@ export const Navbar = () => {
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-success shadow-sm mb-4 py-3">
             <div className="container">
-                {/* Lado Izquierdo: Logo y Datos del Usuario debajo */}
+                {/* Lado Izquierdo: LOGO NUEVO y Datos del Usuario debajo */}
                 <div className="d-flex flex-column">
                     <Link to={isAuth ? "/dashboard" : "/"} className="text-decoration-none">
-                        <span className="navbar-brand mb-0 h1 fw-bold text-white fs-3">NutriFit 🍏</span>
+                        <span className="navbar-brand mb-0 h1 fw-bold text-white fs-3 d-flex align-items-center">
+                            <i className="fas fa-leaf me-2 text-white"></i> NutriFit
+                        </span>
                     </Link>
                     
                     {/* Renderizado condicional del Nombre y Edad */}
@@ -85,7 +87,6 @@ export const Navbar = () => {
                                     </Link>
                                 </li>
 
-                                {/* SECCIÓN AGREGADA: RECETAS */}
                                 <li className="nav-item mx-2">
                                     <Link to="/recetas" className="nav-link text-white text-center">
                                         <i className="fas fa-utensils d-block mb-1 fs-5"></i>
@@ -124,7 +125,6 @@ export const Navbar = () => {
                             </div>
                         </>
                     ) : (
-                        /* Si no está logueado, solo mostramos opción de entrar */
                         <div className="ms-auto">
                             <Link to="/login" className="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-sm">
                                 ENTRAR

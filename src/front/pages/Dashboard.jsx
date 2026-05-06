@@ -7,7 +7,7 @@ export const Dashboard = () => {
         weight: "",
         age: "",
         height: "",
-        goal: "adelgazar", // Valor por defecto
+        goal: "adelgazar",
         dietType: "vegan",
         isGlutenFree: true
     });
@@ -85,12 +85,44 @@ export const Dashboard = () => {
 
     return (
         <div className="container mt-4 animate__animated animate__fadeIn">
+            
+            {/* NUEVA SECCIÓN: TARJETAS DE INSPIRACIÓN */}
+            <div className="row mb-4 g-3">
+                <div className="col-md-4">
+                    <div className="card border-0 shadow-sm overflow-hidden" style={{ borderRadius: "15px" }}>
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80" 
+                             className="card-img-top" alt="Dieta saludable" style={{ height: "160px", objectFit: "cover" }} />
+                        <div className="card-img-overlay d-flex align-items-end p-2 bg-dark bg-opacity-25">
+                            <span className="badge bg-success shadow">Planes Veganos</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="card border-0 shadow-sm overflow-hidden" style={{ borderRadius: "15px" }}>
+                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80" 
+                             className="card-img-top" alt="Ingredientes frescos" style={{ height: "160px", objectFit: "cover" }} />
+                        <div className="card-img-overlay d-flex align-items-end p-2 bg-dark bg-opacity-25">
+                            <span className="badge bg-primary shadow">Enfoque Nutricional</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="card border-0 shadow-sm overflow-hidden" style={{ borderRadius: "15px" }}>
+                        <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=500&q=80" 
+                             className="card-img-top" alt="Recetas equilibrio" style={{ height: "160px", objectFit: "cover" }} />
+                        <div className="card-img-overlay d-flex align-items-end p-2 bg-dark bg-opacity-25">
+                            <span className="badge bg-warning text-dark shadow">Sin Gluten</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="row g-4">
-                {/* FORMULARIO */}
+                {/* FORMULARIO (Se mantiene igual, solo envuelto en la nueva estructura) */}
                 <div className="col-md-5">
-                    <div className="card shadow-sm border-0 p-4 bg-white">
+                    <div className="card shadow-sm border-0 p-4 bg-white" style={{ borderRadius: "15px" }}>
                         <h4 className="fw-bold text-success mb-4 border-bottom pb-2">
-                            <i className="fas fa-utensils me-2"></i>Perfil Nutricional
+                            <i className="fas fa-leaf me-2"></i>Mi NutriFit
                         </h4>
                         <form onSubmit={handleSave}>
                             <div className="row">
@@ -150,9 +182,9 @@ export const Dashboard = () => {
 
                 {/* RESUMEN */}
                 <div className="col-md-7">
-                    <div className="card shadow-sm border-0 p-4 h-100 bg-white">
+                    <div className="card shadow-sm border-0 p-4 h-100 bg-white" style={{ borderRadius: "15px" }}>
                         <h4 className="fw-bold text-success mb-4 border-bottom pb-2">
-                            <i className="fas fa-clipboard-check me-2"></i>Resumen de Perfil
+                            <i className="fas fa-chart-line me-2"></i>Resumen de Perfil
                         </h4>
                         <div className="table-responsive">
                             <table className="table table-borderless align-middle">
