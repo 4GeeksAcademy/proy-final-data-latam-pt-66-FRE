@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import swal from 'sweetalert';
 
 export const Login = () => {
     const [email, setEmail] = useState("");
@@ -29,15 +30,15 @@ export const Login = () => {
                 sessionStorage.setItem("token", data.token);
                 sessionStorage.setItem("user_id", data.user_id);
 
-                alert("¡Bienvenido de nuevo a NutriFit!");
+                swal("¡Bienvenido de nuevo a NutriFit!");
                 navigate("/dashboard");
             } else {
                 const errorData = await response.json();
-                alert("Error: " + (errorData.msg || "Credenciales incorrectas"));
+                swal("Error: " + (errorData.msg || "Credenciales incorrectas"));
             }
         } catch (error) {
             console.error("Error de login:", error);
-            alert("No se pudo conectar con el servidor. Revisa el puerto 3001.");
+            swal("No se pudo conectar con el servidor. Revisa el puerto 3001.");
         }
     };
 
