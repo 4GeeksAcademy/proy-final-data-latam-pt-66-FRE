@@ -18,7 +18,7 @@ export const NutritionPage = () => {
             height: 0,
             age: 0,
             gender: "", // male | female
-            goal: "" // lose | maintain | gain
+            goal: "" // adelgazar | subir masa muscular | mantener saludable
         },
 
         foodEntry: {

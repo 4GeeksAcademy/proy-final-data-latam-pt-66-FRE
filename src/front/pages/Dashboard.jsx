@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import swal from 'sweetalert';
 
 export const Dashboard = () => {
     const [formData, setFormData] = useState({
@@ -11,7 +12,7 @@ export const Dashboard = () => {
         dietType: "vegan",
         isGlutenFree: true
     });
-    
+
     const [profile, setProfile] = useState(null);
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const token = sessionStorage.getItem("token");
@@ -20,7 +21,7 @@ export const Dashboard = () => {
         try {
             const res = await fetch(`${backendUrl}/api/user-profile`, {
                 method: "GET",
-                headers: { 
+                headers: {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json"
                 }
@@ -73,10 +74,10 @@ export const Dashboard = () => {
             });
 
             if (res.ok) {
-                alert("✅ ¡Perfil y plan nutricional actualizados!");
+                swal("✅ ¡Perfil y plan nutricional actualizados!");
                 loadProfile();
             } else {
-                alert("❌ Error al guardar los cambios");
+                swal("❌ Error al guardar los cambios");
             }
         } catch (error) {
             console.error("Error:", error);
@@ -85,13 +86,13 @@ export const Dashboard = () => {
 
     return (
         <div className="container mt-4 animate__animated animate__fadeIn">
-            
+
             {/* NUEVA SECCIÓN: TARJETAS DE INSPIRACIÓN */}
             <div className="row mb-4 g-3">
                 <div className="col-md-4">
                     <div className="card border-0 shadow-sm overflow-hidden" style={{ borderRadius: "15px" }}>
-                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80" 
-                             className="card-img-top" alt="Dieta saludable" style={{ height: "160px", objectFit: "cover" }} />
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80"
+                            className="card-img-top" alt="Dieta saludable" style={{ height: "160px", objectFit: "cover" }} />
                         <div className="card-img-overlay d-flex align-items-end p-2 bg-dark bg-opacity-25">
                             <span className="badge bg-success shadow">Planes Veganos</span>
                         </div>
@@ -99,8 +100,8 @@ export const Dashboard = () => {
                 </div>
                 <div className="col-md-4">
                     <div className="card border-0 shadow-sm overflow-hidden" style={{ borderRadius: "15px" }}>
-                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80" 
-                             className="card-img-top" alt="Ingredientes frescos" style={{ height: "160px", objectFit: "cover" }} />
+                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80"
+                            className="card-img-top" alt="Ingredientes frescos" style={{ height: "160px", objectFit: "cover" }} />
                         <div className="card-img-overlay d-flex align-items-end p-2 bg-dark bg-opacity-25">
                             <span className="badge bg-primary shadow">Enfoque Nutricional</span>
                         </div>
@@ -108,8 +109,8 @@ export const Dashboard = () => {
                 </div>
                 <div className="col-md-4">
                     <div className="card border-0 shadow-sm overflow-hidden" style={{ borderRadius: "15px" }}>
-                        <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=500&q=80" 
-                             className="card-img-top" alt="Recetas equilibrio" style={{ height: "160px", objectFit: "cover" }} />
+                        <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=500&q=80"
+                            className="card-img-top" alt="Recetas equilibrio" style={{ height: "160px", objectFit: "cover" }} />
                         <div className="card-img-overlay d-flex align-items-end p-2 bg-dark bg-opacity-25">
                             <span className="badge bg-warning text-dark shadow">Sin Gluten</span>
                         </div>
@@ -128,17 +129,17 @@ export const Dashboard = () => {
                             <div className="row">
                                 <div className="col-6 mb-3">
                                     <label className="small fw-bold text-muted">NOMBRES</label>
-                                    <input type="text" className="form-control" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
+                                    <input type="text" className="form-control" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} required />
                                 </div>
                                 <div className="col-6 mb-3">
                                     <label className="small fw-bold text-muted">APELLIDOS</label>
-                                    <input type="text" className="form-control" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
+                                    <input type="text" className="form-control" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} required />
                                 </div>
                             </div>
 
                             <div className="mb-3">
                                 <label className="small fw-bold text-muted">OBJETIVO PRINCIPAL</label>
-                                <select className="form-select" value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})}>
+                                <select className="form-select" value={formData.goal} onChange={e => setFormData({ ...formData, goal: e.target.value })}>
                                     <option value="adelgazar">Adelgazar / Definición</option>
                                     <option value="masa_muscular">Subir Masa Muscular</option>
                                     <option value="mantenimiento">Mantenimiento Saludable</option>
@@ -147,13 +148,13 @@ export const Dashboard = () => {
 
                             <div className="mb-3">
                                 <div className="form-check form-switch">
-                                    <input className="form-check-input" type="checkbox" checked={formData.isGlutenFree} 
-                                        onChange={e => setFormData({...formData, isGlutenFree: e.target.checked})} />
+                                    <input className="form-check-input" type="checkbox" checked={formData.isGlutenFree}
+                                        onChange={e => setFormData({ ...formData, isGlutenFree: e.target.checked })} />
                                     <label className="form-check-label fw-bold small text-muted">DIETA SIN TACC (CELIAQUÍA)</label>
                                 </div>
                                 <div className="form-check form-switch mt-2">
-                                    <input className="form-check-input" type="checkbox" checked={formData.dietType === "vegan"} 
-                                        onChange={e => setFormData({...formData, dietType: e.target.checked ? "vegan" : "standard"})} />
+                                    <input className="form-check-input" type="checkbox" checked={formData.dietType === "vegan"}
+                                        onChange={e => setFormData({ ...formData, dietType: e.target.checked ? "vegan" : "standard" })} />
                                     <label className="form-check-label fw-bold small text-muted">DIETA 100% VEGANA</label>
                                 </div>
                             </div>
@@ -161,18 +162,18 @@ export const Dashboard = () => {
                             <div className="row">
                                 <div className="col-4 mb-3">
                                     <label className="small fw-bold text-muted">PESO (KG)</label>
-                                    <input type="number" step="0.1" className="form-control" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} required />
+                                    <input type="number" step="0.1" className="form-control" value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} required />
                                 </div>
                                 <div className="col-4 mb-3">
                                     <label className="small fw-bold text-muted">ALTURA</label>
-                                    <input type="number" className="form-control" value={formData.height} onChange={e => setFormData({...formData, height: e.target.value})} required />
+                                    <input type="number" className="form-control" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} required />
                                 </div>
                                 <div className="col-4 mb-3">
                                     <label className="small fw-bold text-muted">EDAD</label>
-                                    <input type="number" className="form-control" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} required />
+                                    <input type="number" className="form-control" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} required />
                                 </div>
                             </div>
-                            
+
                             <button className="btn btn-success w-100 fw-bold py-2 shadow-sm mt-3">
                                 <i className="fas fa-sync-alt me-2"></i>ACTUALIZAR PLAN
                             </button>
