@@ -445,6 +445,138 @@ export const Home = () => {
                 </div>
             </section>
 
+            {/* TECNOLOGÍAS SECTION */}
+            <section className="py-5 bg-light position-relative overflow-hidden">
+
+                <div className="container">
+
+                    {/* HEADER */}
+                    <div className="text-center mb-5">
+
+                        <h2 className="display-5 fw-bold text-success">
+                            Tecnologías utilizadas
+                        </h2>
+
+                        <p
+                            className="text-muted mx-auto"
+                            style={{ maxWidth: "700px" }}
+                        >
+                            NutriFit fue desarrollada utilizando tecnologías modernas
+                            Full Stack enfocadas en rendimiento, escalabilidad y
+                            experiencia de usuario.
+                        </p>
+
+                    </div>
+
+                    {/* GRID */}
+                    <div className="row g-12">
+
+                        {/* FRONTEND */}
+                        <div className="col-md-6">
+
+                            <div className="card border-0 shadow-lg rounded-4 p-4 h-100 text-center">
+
+                                <div
+                                    className="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                                    style={{
+                                        width: "90px",
+                                        height: "90px",
+                                        borderRadius: "50%",
+                                        background: "rgba(13,110,253,0.1)"
+                                    }}
+                                >
+                                    <i className="fab fa-react text-primary fs-1"></i>
+                                </div>
+
+                                <h4 className="fw-bold mb-3">
+                                    Frontend
+                                </h4>
+
+                                <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
+
+                                    <span className="badge bg-primary px-3 py-2">
+                                        React
+                                    </span>
+
+                                    <span className="badge bg-success px-3 py-2">
+                                        Bootstrap
+                                    </span>
+
+                                    <span className="badge bg-dark px-3 py-2">
+                                        JavaScript
+                                    </span>
+
+                                    <span className="badge bg-warning text-dark px-3 py-2">
+                                        Vite
+                                    </span>
+
+                                </div>
+
+                                <p className="text-muted mb-0">
+                                    Interfaces dinámicas, SPA moderna y experiencia
+                                    responsive enfocada en un diseño intuitivo.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        {/* BACKEND */}
+                        <div className="col-md-6">
+
+                            <div className="card border-0 shadow-lg rounded-4 p-4 h-100 text-center">
+
+                                <div
+                                    className="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                                    style={{
+                                        width: "90px",
+                                        height: "90px",
+                                        borderRadius: "50%",
+                                        background: "rgba(25,135,84,0.1)"
+                                    }}
+                                >
+                                    <i className="fas fa-server text-success fs-1"></i>
+                                </div>
+
+                                <h4 className="fw-bold mb-3">
+                                    Backend
+                                </h4>
+
+                                <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
+
+                                    <span className="badge bg-success px-3 py-2">
+                                        Python
+                                    </span>
+
+                                    <span className="badge bg-dark px-3 py-2">
+                                        Flask
+                                    </span>
+
+                                    <span className="badge bg-secondary px-3 py-2">
+                                        SQLAlchemy
+                                    </span>
+
+                                    <span className="badge bg-danger px-3 py-2">
+                                        JWT
+                                    </span>
+
+                                </div>
+
+                                <p className="text-muted mb-0">
+                                    Autenticación avanzada y manejo
+                                    eficiente de datos nutricionales.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
             {/* FOOTER TOTALMENTE LIMPIO */}
             <footer className="py-5 text-center">
 
