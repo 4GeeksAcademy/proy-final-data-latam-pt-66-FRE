@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import swal from 'sweetalert';
 
 export const Signup = () => {
     const [email, setEmail] = useState("");
@@ -24,15 +25,15 @@ export const Signup = () => {
             });
 
             if (response.ok) {
-                alert("¡Cuenta de NutriFit creada con éxito!");
+                swal("¡Cuenta de NutriFit creada con éxito!");
                 navigate("/login");
             } else {
                 const errorData = await response.json();
-                alert("Error: " + (errorData.msg || "No se pudo crear la cuenta"));
+                swal("Error: " + (errorData.msg || "No se pudo crear la cuenta"));
             }
         } catch (error) {
             console.error("Error de red:", error);
-            alert("Hubo un problema de conexión. Asegúrate de que el puerto 3001 esté en 'Public' en la pestaña de PORTS.");
+            swal("Hubo un problema de conexión. Asegúrate de que el puerto 3001 esté en 'Public' en la pestaña de PORTS.");
         }
     };
 
