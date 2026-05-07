@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 export const Navbar = () => {
     const navigate = useNavigate();
     const [userData, setUserData] = useState({ name: "", age: "" });
-    
+
     const token = sessionStorage.getItem("token");
     const isAuth = !!token;
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -18,7 +18,7 @@ export const Navbar = () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                
+
                 // IMPORTANTE: Usamos 'data.name' porque así está en tu models.py
                 setUserData({
                     name: data.name || "Usuario",
@@ -53,7 +53,7 @@ export const Navbar = () => {
                             <i className="fas fa-leaf me-2 text-white"></i> NutriFit
                         </span>
                     </Link>
-                    
+
                     {/* Renderizado condicional del Nombre y Edad */}
                     {isAuth && userData.name && (
                         <span className="text-white small opacity-75 fw-bold animate__animated animate__fadeIn" style={{ marginTop: "-5px", fontSize: "0.85rem" }}>
@@ -75,9 +75,9 @@ export const Navbar = () => {
                             {/* Centro: Links de navegación con Iconos */}
                             <ul className="navbar-nav mx-auto">
                                 <li className="nav-item mx-2">
-                                    <Link to="/dashboard" className="nav-link text-white text-center">
-                                        <i className="fas fa-user-circle d-block mb-1 fs-5"></i>
-                                        <span className="small fw-bold text-uppercase">Perfil</span>
+                                    <Link to="/home" className="nav-link text-white text-center">
+                                        <i className="fas fa-home d-block mb-1 fs-5"></i>
+                                        <span className="small fw-bold text-uppercase">Home</span>
                                     </Link>
                                 </li>
                                 <li className="nav-item mx-2">
@@ -86,14 +86,12 @@ export const Navbar = () => {
                                         <span className="small fw-bold text-uppercase">Nutrición</span>
                                     </Link>
                                 </li>
-
                                 <li className="nav-item mx-2">
                                     <Link to="/recetas" className="nav-link text-white text-center">
                                         <i className="fas fa-utensils d-block mb-1 fs-5"></i>
                                         <span className="small fw-bold text-uppercase">Recetas</span>
                                     </Link>
                                 </li>
-
                                 <li className="nav-item mx-2">
                                     <Link to="/hidratacion" className="nav-link text-white text-center">
                                         <i className="fas fa-tint d-block mb-1 fs-5"></i>
@@ -112,12 +110,18 @@ export const Navbar = () => {
                                         <span className="small fw-bold text-uppercase">Historial</span>
                                     </Link>
                                 </li>
+                                <li className="nav-item mx-2">
+                                    <Link to="/dashboard" className="nav-link text-white text-center">
+                                        <i className="fas fa-user-circle d-block mb-1 fs-5"></i>
+                                        <span className="small fw-bold text-uppercase">Perfil</span>
+                                    </Link>
+                                </li>
                             </ul>
 
                             {/* Derecha: Botón Salir */}
                             <div className="d-flex justify-content-center mt-3 mt-lg-0">
-                                <button 
-                                    onClick={handleLogout} 
+                                <button
+                                    onClick={handleLogout}
                                     className="btn btn-outline-light btn-sm rounded-pill px-4 fw-bold shadow-sm"
                                 >
                                     SALIR

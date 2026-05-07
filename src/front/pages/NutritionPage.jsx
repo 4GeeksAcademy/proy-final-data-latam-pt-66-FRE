@@ -1,5 +1,4 @@
 import { useReducer, useEffect, useRef } from "react";
-import swal from 'sweetalert';
 
 export const NutritionPage = () => {
 
@@ -257,7 +256,7 @@ export const NutritionPage = () => {
         });
 
         if (!res) {
-            swal("❌ Error al eliminar");
+            alert("❌ Error al eliminar");
             return;
         }
 
