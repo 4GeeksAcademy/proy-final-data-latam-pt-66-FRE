@@ -5,6 +5,7 @@ import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
 
 // Importaciones de NutriFit
+import { Home } from "./pages/Home"; // <-- Se agregó esta importación
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
@@ -22,13 +23,13 @@ export const router = createBrowserRouter(
     /* El Layout envuelve todo para que el Navbar aparezca en todas las páginas */
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>} >
 
-      {/* Rutas de acceso público */}
-      <Route path="/" element={<Signup />} />
+      {/* RUTAS DE ACCESO PÚBLICO */}
+      {/* Definimos Home como la ruta raíz (index) */}
+      <Route index element={<Home />} /> 
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* 
-          RUTAS PROTEGIDAS 
+      {/* RUTAS PROTEGIDAS 
           Envolvemos cada una con <ProtectedRoute> para validar el token
       */}
       <Route 
@@ -59,6 +60,9 @@ export const router = createBrowserRouter(
       {/* Rutas de ejemplo/demo */}
       <Route path="/demo" element={<Demo />} />
       <Route path="/single/:theId" element={<Single />} />
+
+      {/* Redirección por defecto si la ruta no existe */}
+      <Route path="*" element={<Navigate to="/" />} />
 
     </Route>
   )
