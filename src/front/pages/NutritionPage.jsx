@@ -178,9 +178,9 @@ export const NutritionPage = () => {
         if (token) loadAll();
     }, [token]);
 
-    // ========================
-    // INTERVALO RECOMMENDATIONS
-    // ========================
+    // ==========================
+    // INTERVAL RECOMMENDATIONS
+    // ==========================
     useEffect(() => {
         if (!state.recommendations.length || !state.showModal) return;
 
@@ -316,7 +316,7 @@ export const NutritionPage = () => {
     }, [state.user]);
 
     // ========================
-    // DERIVED
+    // MACROS PROGRESS RING
     // ========================
     const MacroRing = ({ value, max, label, color, unit = "g" }) => {
         const radius = 50;
@@ -374,14 +374,16 @@ export const NutritionPage = () => {
         );
     };
 
+    // ==================
+    // RESTANTE CALORÍAS
+    // ==================
     const remaining = state.plan?.calories
         ? state.plan.calories - state.calories
         : 0;
 
-    // ========================
+    // ==========================
     // PROGRESO DINÁMICO CALORÍAS
-    // ========================
-
+    // ==========================
     const caloriePercentage = state.plan?.calories
         ? (state.calories / state.plan.calories) * 100
         : 0;
@@ -461,7 +463,9 @@ export const NutritionPage = () => {
     `}
     </style>
 
-
+    // ===================================
+    // CALCULAR MACROS DESDE LAS CALORÍAS
+    // ===================================
     const calculateMacrosFromCalories = (calories, plan) => {
         if (!plan || !calories) return { protein: "", carbs: "", fat: "" };
 
@@ -937,7 +941,6 @@ export const NutritionPage = () => {
                     </div>
                 </div>
             )}
-
 
         </div>
     );

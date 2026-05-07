@@ -8,7 +8,7 @@ export const ProtectedRoute = ({ children }) => {
     // Si NO hay token, lo mandamos al login inmediatamente
     // "replace" evita que el usuario pueda volver atrás con el botón del navegador
     if (!token) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     // Si hay token, permitimos que entre a la página (children)

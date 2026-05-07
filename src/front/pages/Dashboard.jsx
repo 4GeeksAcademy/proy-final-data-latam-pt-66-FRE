@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import swal from 'sweetalert';
+import { Link } from "react-router-dom";
 
 export const Dashboard = () => {
     const [formData, setFormData] = useState({
@@ -118,106 +119,462 @@ export const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="row g-4">
-                {/* FORMULARIO (Se mantiene igual, solo envuelto en la nueva estructura) */}
-                <div className="col-md-5">
-                    <div className="card shadow-sm border-0 p-4 bg-white" style={{ borderRadius: "15px" }}>
-                        <h4 className="fw-bold text-success mb-4 border-bottom pb-2">
-                            <i className="fas fa-leaf me-2"></i>Mi NutriFit
-                        </h4>
-                        <form onSubmit={handleSave}>
-                            <div className="row">
-                                <div className="col-6 mb-3">
-                                    <label className="small fw-bold text-muted">NOMBRES</label>
-                                    <input type="text" className="form-control" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} required />
+            <div className="row g-4 align-items-stretch">
+
+                {/* =========================
+        FORMULARIO MODERNO
+    ========================== */}
+                <div className="col-lg-6">
+
+                    <div
+                        className="card border-0 shadow-lg h-100 overflow-hidden"
+                        style={{
+                            borderRadius: "28px",
+                            background: "linear-gradient(180deg, #ffffff 0%, #f8fffb 100%)"
+                        }}
+                    >
+
+                        {/* HEADER */}
+                        <div
+                            className="p-4 text-white"
+                            style={{
+                                background: "linear-gradient(135deg, #198754 0%, #157347 100%)"
+                            }}
+                        >
+
+                            <div className="d-flex align-items-center justify-content-between">
+
+                                <div>
+                                    <h3 className="fw-bold mb-1">
+                                        <i className="fas fa-leaf me-2"></i>
+                                        Mi NutriFit
+                                    </h3>
+
+                                    <p className="mb-0 opacity-75 small">
+                                        Personaliza tu experiencia nutricional
+                                    </p>
                                 </div>
-                                <div className="col-6 mb-3">
-                                    <label className="small fw-bold text-muted">APELLIDOS</label>
-                                    <input type="text" className="form-control" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} required />
-                                </div>
+
+
                             </div>
 
-                            <div className="mb-3">
-                                <label className="small fw-bold text-muted">OBJETIVO PRINCIPAL</label>
-                                <select className="form-select" value={formData.goal} onChange={e => setFormData({ ...formData, goal: e.target.value })}>
-                                    <option value="adelgazar">Adelgazar / Definición</option>
-                                    <option value="masa_muscular">Subir Masa Muscular</option>
-                                    <option value="mantenimiento">Mantenimiento Saludable</option>
-                                </select>
-                            </div>
+                        </div>
 
-                            <div className="mb-3">
-                                <div className="form-check form-switch">
-                                    <input className="form-check-input" type="checkbox" checked={formData.isGlutenFree}
-                                        onChange={e => setFormData({ ...formData, isGlutenFree: e.target.checked })} />
-                                    <label className="form-check-label fw-bold small text-muted">DIETA SIN TACC (CELIAQUÍA)</label>
-                                </div>
-                                <div className="form-check form-switch mt-2">
-                                    <input className="form-check-input" type="checkbox" checked={formData.dietType === "vegan"}
-                                        onChange={e => setFormData({ ...formData, dietType: e.target.checked ? "vegan" : "standard" })} />
-                                    <label className="form-check-label fw-bold small text-muted">DIETA 100% VEGANA</label>
-                                </div>
-                            </div>
+                        {/* BODY */}
+                        <div className="p-4">
 
-                            <div className="row">
-                                <div className="col-4 mb-3">
-                                    <label className="small fw-bold text-muted">PESO (KG)</label>
-                                    <input type="number" step="0.1" className="form-control" value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} required />
-                                </div>
-                                <div className="col-4 mb-3">
-                                    <label className="small fw-bold text-muted">ALTURA</label>
-                                    <input type="number" className="form-control" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} required />
-                                </div>
-                                <div className="col-4 mb-3">
-                                    <label className="small fw-bold text-muted">EDAD</label>
-                                    <input type="number" className="form-control" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} required />
-                                </div>
-                            </div>
+                            <form onSubmit={handleSave}>
 
-                            <button className="btn btn-success w-100 fw-bold py-2 shadow-sm mt-3">
-                                <i className="fas fa-sync-alt me-2"></i>ACTUALIZAR PLAN
-                            </button>
-                        </form>
+                                {/* NOMBRES */}
+                                <div className="row g-3">
+
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-semibold text-muted small">
+                                            Nombre
+                                        </label>
+
+                                        <div className="input-group">
+                                            <span className="input-group-text bg-light border-0">
+                                                <i className="fas fa-user text-success"></i>
+                                            </span>
+
+                                            <input
+                                                type="text"
+                                                className="form-control border-0 bg-light py-2"
+                                                placeholder="Nombre"
+                                                value={formData.firstName}
+                                                onChange={e =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        firstName: e.target.value
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-semibold text-muted small">
+                                            Apellidos
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="form-control border-0 bg-light py-2"
+                                            placeholder="Apellidos"
+                                            value={formData.lastName}
+                                            onChange={e =>
+                                                setFormData({
+                                                    ...formData,
+                                                    lastName: e.target.value
+                                                })
+                                            }
+                                            required
+                                        />
+                                    </div>
+
+                                </div>
+
+                                {/* OBJETIVO */}
+                                <div className="mt-4">
+
+                                    <label className="form-label fw-semibold text-muted small">
+                                        Objetivo Principal
+                                    </label>
+
+                                    <select
+                                        className="form-select border-0 bg-light py-3"
+                                        value={formData.goal}
+                                        onChange={e =>
+                                            setFormData({
+                                                ...formData,
+                                                goal: e.target.value
+                                            })
+                                        }
+                                    >
+                                        <option value="adelgazar">
+                                            Adelgazar / Definición
+                                        </option>
+
+                                        <option value="masa_muscular">
+                                            Subir Masa Muscular
+                                        </option>
+
+                                        <option value="mantenimiento">
+                                            Mantenimiento Saludable
+                                        </option>
+                                    </select>
+
+                                </div>
+
+                                {/* SWITCHES */}
+                                <div className="mt-4">
+
+                                    <div
+                                        className="d-flex justify-content-between align-items-center bg-light rounded-4 p-3 mb-3"
+                                    >
+
+                                        <div>
+                                            <div className="fw-bold">
+                                                Dieta Sin TACC
+                                            </div>
+
+                                            <small className="text-muted">
+                                                Ideal para celiaquía
+                                            </small>
+                                        </div>
+
+                                        <div className="form-check form-switch m-0">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                checked={formData.isGlutenFree}
+                                                onChange={e =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        isGlutenFree: e.target.checked
+                                                    })
+                                                }
+                                            />
+                                        </div>
+
+                                    </div>
+
+                                    <div
+                                        className="d-flex justify-content-between align-items-center bg-light rounded-4 p-3"
+                                    >
+
+                                        <div>
+                                            <div className="fw-bold">
+                                                Dieta Vegana
+                                            </div>
+
+                                            <small className="text-muted">
+                                                Alimentación 100% vegetal
+                                            </small>
+                                        </div>
+
+                                        <div className="form-check form-switch m-0">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                checked={formData.dietType === "vegan"}
+                                                onChange={e =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        dietType: e.target.checked
+                                                            ? "vegan"
+                                                            : "standard"
+                                                    })
+                                                }
+                                            />
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                {/* MÉTRICAS */}
+                                <div className="row g-3 mt-2">
+
+                                    <div className="col-md-4">
+
+                                        <div className="bg-light rounded-4 p-3 text-center">
+
+                                            <i className="fas fa-weight text-muted mb-2"></i>
+
+                                            <label className="small text-muted d-block">
+                                                Peso
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                className="form-control border-0 bg-white text-center fw-bold"
+                                                value={formData.weight}
+                                                onChange={e =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        weight: e.target.value
+                                                    })
+                                                }
+                                                required
+                                            />
+
+                                        </div>
+
+                                    </div>
+
+                                    <div className="col-md-4">
+
+                                        <div className="bg-light rounded-4 p-3 text-center">
+
+                                            <i className="fas fa-ruler-vertical text-muted mb-2"></i>
+
+                                            <label className="small text-muted d-block">
+                                                Altura
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                className="form-control border-0 bg-white text-center fw-bold"
+                                                value={formData.height}
+                                                onChange={e =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        height: e.target.value
+                                                    })
+                                                }
+                                                required
+                                            />
+
+                                        </div>
+
+                                    </div>
+
+                                    <div className="col-md-4">
+
+                                        <div className="bg-light rounded-4 p-3 text-center">
+
+                                            <i className="fas fa-calendar text-muted mb-2"></i>
+
+                                            <label className="small text-muted d-block">
+                                                Edad
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                className="form-control border-0 bg-white text-center fw-bold"
+                                                value={formData.age}
+                                                onChange={e =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        age: e.target.value
+                                                    })
+                                                }
+                                                required
+                                            />
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                {/* BUTTONS */}
+                                <div className="d-grid gap-3 mt-4">
+
+                                    <button
+                                        className="btn btn-success fw-bold py-3 shadow"
+                                        style={{
+                                            borderRadius: "14px"
+                                        }}
+                                    >
+                                        <i className="fas fa-sync-alt me-2"></i>
+                                        Actualizar Plan
+                                    </button>
+                                </div>
+
+                            </form>
+
+                        </div>
+
                     </div>
+
                 </div>
 
                 {/* RESUMEN */}
-                <div className="col-md-7">
-                    <div className="card shadow-sm border-0 p-4 h-100 bg-white" style={{ borderRadius: "15px" }}>
-                        <h4 className="fw-bold text-success mb-4 border-bottom pb-2">
-                            <i className="fas fa-chart-line me-2"></i>Resumen de Perfil
-                        </h4>
-                        <div className="table-responsive">
-                            <table className="table table-borderless align-middle">
-                                <tbody>
-                                    <tr className="border-bottom">
-                                        <td className="text-muted small fw-bold py-3">OBJETIVO</td>
-                                        <td className="py-3 fw-bold text-uppercase text-primary">
-                                            {profile?.goal === "masa_muscular" ? "Subir Masa Muscular" : "Adelgazar"}
-                                        </td>
-                                    </tr>
-                                    <tr className="border-bottom">
-                                        <td className="text-muted small fw-bold py-3">TIPO DE DIETA</td>
-                                        <td className="py-3">
-                                            <span className={`badge ${profile?.diet_type === 'vegan' ? 'bg-success' : 'bg-secondary'} me-2`}>
-                                                {profile?.diet_type === 'vegan' ? 'VEGANA' : 'ESTÁNDAR'}
-                                            </span>
-                                            {profile?.is_gluten_free && <span className="badge bg-warning text-dark">SIN TACC</span>}
-                                        </td>
-                                    </tr>
-                                    <tr className="border-bottom">
-                                        <td className="text-muted small fw-bold py-3">PESO ACTUAL</td>
-                                        <td className="py-3 fw-bold text-success">{profile?.weight ? `${profile.weight} kg` : "---"}</td>
-                                    </tr>
-                                    <tr className="border-bottom">
-                                        <td className="text-muted small fw-bold py-3">ESTATURA / EDAD</td>
-                                        <td className="py-3">{profile?.height} cm / {profile?.age} años</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                <div className="col-lg-6 d-flex">
+
+                    <div
+                        className="card border-0 shadow-lg h-100 w-100 d-flex flex-column justify-content-center"
+                        style={{
+                            borderRadius: "28px",
+                            minHeight: "100%"
+                        }}
+                    >
+
+                        {/* HEADER */}
+                        <div className="p-4 border-bottom text-center">
+
+                            <h3 className="fw-bold text-success mb-1">
+                                <i className="fas fa-chart-line me-2"></i>
+                                Resumen de Perfil
+                            </h3>
+
+                            <small className="text-muted">
+                                Estado actual de tu progreso nutricional
+                            </small>
+
                         </div>
+
+                        {/* BODY */}
+                        <div className="p-4 flex-grow-1 d-flex flex-column">
+
+                            <div className="row g-4 w-100 justify-content-center">
+
+                                {/* OBJETIVO */}
+                                <div className="col-md-6">
+
+                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+
+                                        <small className="text-muted fw-semibold">
+                                            OBJETIVO
+                                        </small>
+
+                                        <h4 className="fw-bold text-primary mt-2">
+                                            {profile?.goal === "masa_muscular"
+                                                ? "Subir Masa"
+                                                : "Adelgazar"}
+                                        </h4>
+
+                                        <p className="small text-muted mb-0">
+                                            Meta nutricional principal configurada
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                {/* DIETA */}
+                                <div className="col-md-6">
+
+                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+
+                                        <small className="text-muted fw-semibold">
+                                            TIPO DE DIETA
+                                        </small>
+
+                                        <div className="mt-3">
+
+                                            <span
+                                                className={`badge px-3 py-2 fs-6 ${profile?.diet_type === "vegan"
+                                                    ? "bg-success"
+                                                    : "bg-secondary"
+                                                    }`}
+                                            >
+                                                {profile?.diet_type === "vegan"
+                                                    ? "VEGANA"
+                                                    : "ESTÁNDAR"}
+                                            </span>
+
+                                            {profile?.is_gluten_free && (
+                                                <span className="badge bg-warning text-dark px-3 py-2 fs-6 ms-2">
+                                                    SIN TACC
+                                                </span>
+                                            )}
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                {/* PESO */}
+                                <div className="col-md-6">
+
+                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+
+                                        <small className="fw-semibold text-muted">
+                                            PESO ACTUAL
+                                        </small>
+
+                                        <h2 className="fw-bold mt-2 text-dark">
+                                            {profile?.weight || "--"} kg
+                                        </h2>
+
+                                        <i className="fas fa-weight fs-3 text-muted opacity-50"></i>
+
+                                    </div>
+
+                                </div>
+
+                                {/* ALTURA */}
+                                <div className="col-md-6">
+
+                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+
+                                        <small className="fw-semibold text-muted">
+                                            ALTURA / EDAD
+                                        </small>
+
+                                        <h2 className="fw-bold text-dark mt-2">
+                                            {profile?.height || "--"} cm
+                                        </h2>
+
+                                        <div className="text-dark fw-semibold">
+                                            {profile?.age || "--"} años
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            {/* BOTÓN ABAJO */}
+                            <div className="mt-auto pt-4 text-center">
+
+                                <Link
+                                    to="/nutricion"
+                                    className="btn btn-success fw-bold py-3 px-5 shadow w-100"
+                                    style={{
+                                        borderRadius: "14px"
+                                    }}
+                                >
+                                    <i className="fas fa-utensils me-2"></i>
+                                    Registra tus alimentos
+                                </Link>
+
+                            </div>
+
+                        </div>
+
                     </div>
+
                 </div>
+
             </div>
         </div>
     );
