@@ -24,20 +24,19 @@ export const Home = () => {
         }
     ];
 
-    const loadMessage = async () => {
-        try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL;
-            if (!backendUrl) return;
-            const response = await fetch(`${backendUrl}/api/hello`);
-            const data = await response.json();
-            if (response.ok) dispatch({ type: "set_hello", payload: data.message });
-        } catch (error) {
-            console.log("Error loading message from backend");
-        }
-    };
+    // const loadMessage = async () => {
+    //     try {
+    //         const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    //         if (!backendUrl) return;
+    //         const response = await fetch(`${backendUrl}/api/hello`);
+    //         const data = await response.json();
+    //         if (response.ok) dispatch({ type: "set_hello", payload: data.message });
+    //     } catch (error) {
+    //         console.log("Error loading message from backend");
+    //     }
+    // };
 
     useEffect(() => {
-        loadMessage();
 
         // Inicialización manual para asegurar el movimiento cada 4 segundos
         const carouselElement = document.querySelector('#healthCarousel');
