@@ -121,9 +121,7 @@ export const Dashboard = () => {
 
             <div className="row g-4 align-items-stretch">
 
-                {/* =========================
-        FORMULARIO MODERNO
-    ========================== */}
+                {/* FORMULARIO */}
                 <div className="col-lg-6">
 
                     <div
@@ -449,10 +447,12 @@ export const Dashboard = () => {
 
                         </div>
 
+
+
                         {/* BODY */}
                         <div className="p-4 flex-grow-1 d-flex flex-column">
 
-                            <div className="row g-4 w-100 justify-content-center">
+                            <div className="row g-4 w-100">
 
                                 {/* OBJETIVO */}
                                 <div className="col-md-6">

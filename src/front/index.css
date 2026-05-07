@@ -1,0 +1,19 @@
+.bg-orange {
+  background: linear-gradient(90deg, #ff9800, #ff5722);
+}
+
+.text-orange {
+  color: #ff5722;
+}
+
+.progress {
+  background: #edf2f7;
+  overflow: hidden;
+}
+
+.progress-bar {
+  transition:
+    width 0.6s ease,
+    background 0.4s ease;
+  border-radius: 12px;
+}

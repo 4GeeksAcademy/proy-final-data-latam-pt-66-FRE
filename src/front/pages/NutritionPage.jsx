@@ -1,6 +1,4 @@
 import { useReducer, useEffect, useRef } from "react";
-import swal from 'sweetalert';
-
 
 export const NutritionPage = () => {
 
@@ -20,7 +18,7 @@ export const NutritionPage = () => {
             height: 0,
             age: 0,
             gender: "", // male | female
-            goal: "" // adelgazar | subir masa muscular | mantener saludable
+            goal: "" // lose | maintain | gain
         },
 
         foodEntry: {
@@ -178,9 +176,9 @@ export const NutritionPage = () => {
         if (token) loadAll();
     }, [token]);
 
-    // ==========================
-    // INTERVAL RECOMMENDATIONS
-    // ==========================
+    // ========================
+    // INTERVALO RECOMMENDATIONS
+    // ========================
     useEffect(() => {
         if (!state.recommendations.length || !state.showModal) return;
 
@@ -258,7 +256,7 @@ export const NutritionPage = () => {
         });
 
         if (!res) {
-            swal("❌ Error al eliminar");
+            alert("❌ Error al eliminar");
             return;
         }
 
@@ -316,7 +314,7 @@ export const NutritionPage = () => {
     }, [state.user]);
 
     // ========================
-    // MACROS PROGRESS RING
+    // DERIVED
     // ========================
     const MacroRing = ({ value, max, label, color, unit = "g" }) => {
         const radius = 50;
@@ -374,98 +372,11 @@ export const NutritionPage = () => {
         );
     };
 
-    // ==================
-    // RESTANTE CALORÍAS
-    // ==================
     const remaining = state.plan?.calories
         ? state.plan.calories - state.calories
         : 0;
 
-    // ==========================
-    // PROGRESO DINÁMICO CALORÍAS
-    // ==========================
-    const caloriePercentage = state.plan?.calories
-        ? (state.calories / state.plan.calories) * 100
-        : 0;
 
-    const getCaloriesStatus = () => {
-
-        // 🟢 INICIO
-        if (caloriePercentage <= 25) {
-            return {
-                barClass: "bg-success",
-                textClass: "text-success",
-                badgeClass: "bg-success",
-                message: "¡Comienza a alimentar tu día!",
-            };
-        }
-
-        // 🔵 PERFECTO
-        if (caloriePercentage <= 60) {
-            return {
-                barClass: "bg-info",
-                textClass: "text-info",
-                badgeClass: "bg-info",
-                message: "¡Excelente progreso!",
-            };
-        }
-
-        // 🟡 CERCA
-        if (caloriePercentage <= 85) {
-            return {
-                barClass: "bg-warning",
-                textClass: "text-warning",
-                badgeClass: "bg-warning text-dark",
-                message: "¡Ya casi alcanzas tu objetivo!",
-            };
-        }
-
-        // 🟠 LIMITE
-        if (caloriePercentage <= 100) {
-            return {
-                barClass: "bg-orange",
-                textClass: "text-orange",
-                badgeClass: "bg-orange",
-                message: "¡Cuidado, estás llegando al límite!",
-            };
-        }
-
-        // 🔴 EXCESO
-        return {
-            barClass: "bg-danger",
-            textClass: "text-danger",
-            badgeClass: "bg-danger",
-            message: "¡Has excedido tus calorías!",
-        };
-    };
-
-    const calorieStatus = getCaloriesStatus();
-
-    <style>
-        {`
-        .bg-orange{
-            background: linear-gradient(90deg,#ff9800,#ff5722);
-        }
-
-        .text-orange{
-            color:#ff5722;
-        }
-
-        .progress{
-            background:#edf2f7;
-            overflow:hidden;
-        }
-
-        .progress-bar{
-            transition: width 0.6s ease, background 0.4s ease;
-            border-radius:12px;
-        }
-    `}
-    </style>
-
-    // ===================================
-    // CALCULAR MACROS DESDE LAS CALORÍAS
-    // ===================================
     const calculateMacrosFromCalories = (calories, plan) => {
         if (!plan || !calories) return { protein: "", carbs: "", fat: "" };
 
@@ -695,21 +606,15 @@ export const NutritionPage = () => {
                 <div className="col-md-6">
                     <div className="card shadow-lg rounded-4 border-0 p-4 h-100 d-flex justify-content-center">
 
-                        {/* CALORÍAS (TOP) */}
+                        {/* 🔥 CALORÍAS (TOP) */}
                         <div className="w-100 mb-4">
 
                             {/* HEADER */}
-                            <div className="text-center mb-3">
+                            <div className="text-center mb-2">
                                 <h6 className="text-muted mb-1">Calorías consumidas</h6>
-                                <h3 className={`fw-bold mb-1 ${calorieStatus.textClass}`}>
+                                <h4 className="fw-bold text-success mb-0">
                                     {state.calories} / {state.plan?.calories || 0} kcal
-                                </h3>
-
-                                <div
-                                    className={`fw-semibold ${calorieStatus.textClass}`}
-                                >
-                                    {calorieStatus.emoji} {calorieStatus.message}
-                                </div>
+                                </h4>
                             </div>
 
                             {/* MAIN CALORIAS */}
@@ -718,7 +623,10 @@ export const NutritionPage = () => {
                                 style={{ height: "14px", borderRadius: "12px" }}
                             >
                                 <div
-                                    className={`progress-bar ${calorieStatus.barClass}`}
+                                    className={`progress-bar ${state.calories > state.plan?.calories
+                                        ? "bg-danger"
+                                        : "bg-success"
+                                        }`}
                                     role="progressbar"
                                     style={{
                                         width: `${state.plan?.calories
@@ -737,7 +645,12 @@ export const NutritionPage = () => {
                             <div className="d-flex justify-content-between mt-1">
 
                                 <div className="text-center mt-2">
-                                    <span className={`badge ${calorieStatus.badgeClass}`}>
+                                    <span
+                                        className={`badge ${state.calories > state.plan?.calories
+                                            ? "bg-danger"
+                                            : "bg-success"
+                                            }`}
+                                    >
                                         {state.plan?.calories
                                             ? Math.round(
                                                 (state.calories / state.plan.calories) * 100
@@ -749,7 +662,7 @@ export const NutritionPage = () => {
 
 
                                 <small
-                                    className={`fw-semibold ${remaining < 0 ? "text-danger" : "text-muted"
+                                    className={`fw-semibold ${remaining < 0 ? "text-danger" : "text-success"
                                         }`}
                                 >
                                     {remaining >= 0
@@ -941,6 +854,7 @@ export const NutritionPage = () => {
                     </div>
                 </div>
             )}
+
 
         </div>
     );
