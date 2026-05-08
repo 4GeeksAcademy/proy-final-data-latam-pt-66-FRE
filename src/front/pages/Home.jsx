@@ -204,7 +204,7 @@ export const Home = () => {
                                 </span>
 
                                 <p className="text-muted small">
-                                    Encargado de APIs, autenticación JWT, base de datos y arquitectura del sistema.
+                                    Encargado de APIs, autenticación JWT, base de datos y arquitectura del sistema. Mi objetivo es fusionar mis conocimientos de ingeniería ambiental con el desarrollo de software para crear soluciones que optimicen procesos ambientales mediante datos reales
                                 </p>
 
                             </div>
