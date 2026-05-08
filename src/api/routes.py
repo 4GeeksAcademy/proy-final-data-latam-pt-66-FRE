@@ -465,3 +465,7 @@ def get_ai_recommendations():
     return jsonify({
         "recommendations": recommendations
     }), 200
+
+
+
+

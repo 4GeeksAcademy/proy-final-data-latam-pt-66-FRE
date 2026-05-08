@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { Link } from "react-router-dom";
 import erikaImg from "../assets/erikaImg.jpg";
+import raymonImg from "../assets/img/raymonImg.jpg";
 
 export const Home = () => {
     const { store, dispatch } = useGlobalReducer();
@@ -183,7 +184,7 @@ export const Home = () => {
                             <div className="card border-0 shadow-lg rounded-4 text-center p-4 h-100">
 
                                 <img
-                                    src=""
+                                    src={raymonImg}
                                     alt="Integrante"
                                     className="rounded-circle mx-auto mb-3 shadow"
                                     style={{
