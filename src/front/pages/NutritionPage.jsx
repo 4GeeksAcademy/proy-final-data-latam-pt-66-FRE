@@ -776,7 +776,7 @@ export const NutritionPage = () => {
                             if (alerts.length === 0) {
                                 alerts.push({
                                     type: "success",
-                                    text: "¡Tus macronutrientes van equilibrados!"
+                                    text: "¡Aumenta tus macronutrientes!"
                                 });
                             }
 
