@@ -465,7 +465,7 @@ export const NutritionPage = () => {
 
                         <form onSubmit={state.editingId ? handleUpdateFood : handleAddFood}>
 
-                            {/* 🍽 FOOD */}
+                            {/* FOOD */}
                             <div className="mb-3">
                                 <label className="form-label fw-semibold">Alimento</label>
                                 <input
@@ -619,28 +619,46 @@ export const NutritionPage = () => {
                             </div>
 
                             {/* MAIN CALORIAS */}
-                            <div
-                                className="progress"
-                                style={{ height: "14px", borderRadius: "12px" }}
-                            >
-                                <div
-                                    className={`progress-bar ${state.calories > state.plan?.calories
-                                        ? "bg-danger"
-                                        : "bg-success"
-                                        }`}
-                                    role="progressbar"
-                                    style={{
-                                        width: `${state.plan?.calories
-                                            ? Math.min(
-                                                (state.calories / state.plan.calories) * 100,
-                                                100
-                                            )
-                                            : 0
-                                            }%`,
-                                        transition: "width 0.5s ease"
-                                    }}
-                                />
-                            </div>
+                            {(() => {
+
+                                const percentage = state.plan?.calories
+                                    ? (state.calories / state.plan.calories) * 100
+                                    : 0;
+
+                                let progressColor = "bg-success";
+
+                                if (percentage >= 50 && percentage < 80) {
+                                    progressColor = "bg-warning";
+                                }
+
+                                if (percentage >= 80 && percentage <= 100) {
+                                    progressColor = "bg-orange";
+                                }
+
+                                if (percentage > 100) {
+                                    progressColor = "bg-danger";
+                                }
+
+                                return (
+                                    <div
+                                        className="progress"
+                                        style={{
+                                            height: "14px",
+                                            borderRadius: "12px"
+                                        }}
+                                    >
+                                        <div
+                                            className={`progress-bar ${progressColor}`}
+                                            role="progressbar"
+                                            style={{
+                                                width: `${Math.min(percentage, 100)}%`,
+                                                transition:
+                                                    "width 0.5s ease, background-color 0.5s ease"
+                                            }}
+                                        />
+                                    </div>
+                                );
+                            })()}
 
                             {/* FOOTER */}
                             <div className="d-flex justify-content-between mt-1">

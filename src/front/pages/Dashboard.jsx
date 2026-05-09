@@ -452,12 +452,12 @@ export const Dashboard = () => {
                         {/* BODY */}
                         <div className="p-4 flex-grow-1 d-flex flex-column">
 
-                            <div className="row g-4 w-100">
+                            <div className="row g-4 w-100 justify-content-center mx-auto">
 
                                 {/* OBJETIVO */}
-                                <div className="col-md-6">
+                                <div className="col-md-6 d-flex justify-content-center">
 
-                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                                    <div className="bg-light rounded-4 p-4 h-100 w-100 d-flex flex-column justify-content-center align-items-center text-center">
 
                                         <small className="text-muted fw-semibold">
                                             OBJETIVO
@@ -478,9 +478,9 @@ export const Dashboard = () => {
                                 </div>
 
                                 {/* DIETA */}
-                                <div className="col-md-6">
+                                <div className="col-md-6 d-flex justify-content-center">
 
-                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                                    <div className="bg-light rounded-4 p-4 h-100 w-100 d-flex flex-column justify-content-center align-items-center text-center">
 
                                         <small className="text-muted fw-semibold">
                                             TIPO DE DIETA
@@ -490,8 +490,8 @@ export const Dashboard = () => {
 
                                             <span
                                                 className={`badge px-3 py-2 fs-6 ${profile?.diet_type === "vegan"
-                                                    ? "bg-success"
-                                                    : "bg-secondary"
+                                                        ? "bg-success"
+                                                        : "bg-secondary"
                                                     }`}
                                             >
                                                 {profile?.diet_type === "vegan"
@@ -512,9 +512,9 @@ export const Dashboard = () => {
                                 </div>
 
                                 {/* PESO */}
-                                <div className="col-md-6">
+                                <div className="col-md-6 d-flex justify-content-center">
 
-                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                                    <div className="bg-light rounded-4 p-4 h-100 w-100 d-flex flex-column justify-content-center align-items-center text-center">
 
                                         <small className="fw-semibold text-muted">
                                             PESO ACTUAL
@@ -531,9 +531,9 @@ export const Dashboard = () => {
                                 </div>
 
                                 {/* ALTURA */}
-                                <div className="col-md-6">
+                                <div className="col-md-6 d-flex justify-content-center">
 
-                                    <div className="bg-light rounded-4 p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                                    <div className="bg-light rounded-4 p-4 h-100 w-100 d-flex flex-column justify-content-center align-items-center text-center">
 
                                         <small className="fw-semibold text-muted">
                                             ALTURA / EDAD

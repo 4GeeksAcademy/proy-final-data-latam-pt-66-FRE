@@ -3,6 +3,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { Link } from "react-router-dom";
 import erikaImg from "../assets/erikaImg.jpg";
 import raymonImg from "../assets/img/raymonImg.jpg";
+import frankImg from "../assets/frankImg.jpg";
 
 export const Home = () => {
     const { store, dispatch } = useGlobalReducer();
@@ -215,7 +216,7 @@ export const Home = () => {
                             <div className="card border-0 shadow-lg rounded-4 text-center p-4 h-100">
 
                                 <img
-                                    src=""
+                                    src={frankImg}
                                     alt="Integrante"
                                     className="rounded-circle mx-auto mb-3 shadow"
                                     style={{
@@ -235,7 +236,7 @@ export const Home = () => {
                                 </span>
 
                                 <p className="text-muted small">
-                                    Responsable de recomendaciones inteligentes, nutrición personalizada y experiencia fitness.
+                                    Responsable de algoritmos de nutrición personalizada y planes alimenticios inteligentes (masa muscular, TACC, vegano). Mi meta es desarrollar soluciones freelance que integren el fitness con la ingeniería de software.
                                 </p>
 
                             </div>
