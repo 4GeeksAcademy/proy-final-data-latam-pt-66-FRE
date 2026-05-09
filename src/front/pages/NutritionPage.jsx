@@ -452,7 +452,7 @@ export const NutritionPage = () => {
 
                 {/* FORM */}
                 <div className="col-md-6" ref={formRef}>
-                    <div className="card rounded-4 shadow border-0 p-4 h-100">
+                    <div className="card rounded-4 shadow border-0 p-4 h-100 d-flex justify-content-center">
 
                         {/* HEADER */}
                         <div className="mb-3 text-center">
@@ -728,6 +728,78 @@ export const NutritionPage = () => {
                             </div>
 
                         </div>
+
+                        {/* 🚨 ALERTAS MACROS */}
+                        {(() => {
+
+                            const alerts = [];
+
+                            const checkMacro = (current, max, label) => {
+
+                                const percentage = max
+                                    ? (current / max) * 100
+                                    : 0;
+
+                                if (percentage >= 100) {
+                                    alerts.push({
+                                        type: "danger",
+                                        text: `Excediste tu consumo de ${label}`
+                                    });
+                                }
+
+                                else if (percentage >= 80) {
+                                    alerts.push({
+                                        type: "warning",
+                                        text: `Estás cerca del límite de ${label}`
+                                    });
+                                }
+                            };
+
+                            checkMacro(
+                                state.macros.protein,
+                                state.plan?.protein,
+                                "proteína"
+                            );
+
+                            checkMacro(
+                                state.macros.carbs,
+                                state.plan?.carbs,
+                                "carbohidratos"
+                            );
+
+                            checkMacro(
+                                state.macros.fat,
+                                state.plan?.fat,
+                                "grasas"
+                            );
+
+                            if (alerts.length === 0) {
+                                alerts.push({
+                                    type: "success",
+                                    text: "¡Tus macronutrientes van equilibrados!"
+                                });
+                            }
+
+                            return (
+                                <div className="mt-4">
+
+                                    {alerts.map((alert, index) => (
+                                        <div
+                                            key={index}
+                                            className={`alert alert-${alert.type} text-center py-2 mb-2 rounded-4 border-0`}
+                                            style={{
+                                                fontSize: "0.9rem"
+                                            }}
+                                        >
+                                            {alert.text}
+                                        </div>
+                                    ))}
+
+                                </div>
+                            );
+
+                        })()}
+
                     </div>
                 </div>
 
