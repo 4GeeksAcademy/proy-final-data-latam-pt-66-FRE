@@ -21,6 +21,7 @@ flask-swagger = "*"
 flask-jwt-extended = "*"
 werkzeug = "*"
 flask-cors = "*"
+tomli = "*"
 
 [requires]
 python_version = "3.13"
